@@ -1,0 +1,79 @@
+	ESP32 pinout
+	Audio (any port)
+		CLK		GPIO *
+		OUT		GPIO *
+		WS		GPIO *
+		(IN)	GPIO *
+
+	SD card (SD 4-wire protocol)
+		GPIO 2
+			 4
+			 12
+			 13
+			 14
+			 15
+	TFT
+		SCK		GPIO 18	(IO_MUX)
+		MOSI	GPIO 23	(IO_MUX)
+		MISO	GPIO 19	(IO_MUX)
+		CS		GPIO 5	(IO_MUX)
+		D/C 	GPIO 32
+		reset	GPIO 17
+		LED		GPIO 33
+
+	buttons
+		menu in 	34
+		menu out 	35
+		FF
+		rewind
+		play
+
+
+	slider
+		Touch wheel, at least 3 GPIO out of ten touch available
+
+	Battery test
+		Any of the ADC pins
+
+pin list
+
+0		btn center
+1			TX debug output at boot
+2		SD D0
+3			RX program at boot
+4		SD D1
+5		TFT CS
+6			integrated SPI flash
+7			integrated SPI flash
+8			integrated SPI flash
+9			integrated SPI flash
+10			integrated SPI flash
+11			integrated SPI flash
+12		SD D2
+13		SD D3
+14		SD CLK
+15		SD CMD
+16		I2S CLK
+17		TFT reset
+18		TFT SCK
+19		TFT MISO
+20			not exposed
+21		I2S OUT
+22		I2S WS
+23		TFT MOSI
+24			not exposed
+25		wheel touch 1
+26		wheel touch 2
+27		wheel touch 3
+28			not exposed
+29			not exposed
+30			not exposed
+31			not exposed
+32		TFT DC
+33		TFT led
+34		btn up 	(external pullup needed)
+35		btn down 	(external pullup needed)
+36		btn right 			(external pullup needed)
+37			not exposed
+38			not exposed
+39		btn left 		(external pullup needed)

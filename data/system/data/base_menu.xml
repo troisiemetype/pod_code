@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<main_menu>
+	<menu name="playing" type="function"/>
+	<menu name="music" type="menu">
+		<menu name="artists" type="dmenu"/>
+		<menu name="albums" type="dmenu"/>
+		<menu name="compilations" type="dmenu"/>
+		<menu name="songs" type="dmenu"/>
+		<menu name="playlists" type="dmenu"/>
+	</menu>
+	<menu name="settings" type="menu">
+		<menu name="maxvolume" type="function"/>
+		<menu name="brightness" type="function"/>
+		<menu name="equalizer" type="function"/>
+		<menu name="legals" type="function"/>
+	</menu>
+</main_menu>

@@ -1,0 +1,19 @@
+teensypod - draft
+
+hardware :
+	teensy
+	DAC (+ ADC ?)
+	SD card
+	lipo battery + charging
+	screen (ST7735 ILI9225 ILI9341)
+	buttons + wheel
+	USB + audio aout (+ audio in ?)
+
+software :
+	SD access
+	screen
+	menus (may xml + CSS be used ?)
+	music library / database management
+	audio decoding (wave / mp3 / ogg / flac / opus)
+	audio DAC ( / ADC)
+	user inputs (capacitive wheel)
