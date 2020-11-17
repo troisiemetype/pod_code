@@ -9,6 +9,8 @@ tinyxml2::XMLDocument menuTree;
 tinyxml2::XMLElement *root = NULL;
 tinyxml2::XMLElement *currentNode = NULL;
 
+int32_t *fileID = NULL;
+
 const uint8_t maxLevel = 6;
 uint8_t level = 0;
 levelState_t state[maxLevel];
@@ -23,44 +25,102 @@ bool data_initXML(){
 	}
 	root = menuTree.RootElement();
 	data_menuSetLevel(root, true);
-	return 0;
+	return DATA_OK;
 }
 
 bool data_makeDatabase(){
 	if(menuTree.LoadFile("/system/data/base_menu.xml")){
 		tft.println("/system/data/base_menu.xml does not exit.");
 		tft.println("Check SD card.");
-		return 1;
-	} else {
-		tft.fillScreen(TFT_BLACK);
-		tft.setCursor(1, 0);
-		tft.println("Constructing database");
+		return DATA_FILE_ERR;
+	}
+	tft.fillScreen(TFT_BLACK);
+	tft.setCursor(1, 0);
+	tft.println("Constructing database");
+
+	bool result = data_listFiles();
+	if(result){
+		return result;
 	}
 
+	tinyxml2::XMLDocument menu;
+	menuTree.DeepCopy(&menu);
+
+	tinyxml2::XMLDocument songs;
+	songs.LoadFile("/system/data/songs.xml");
+
+	tft.println("Creating whole menu");
+	delay(500);
+
+	currentNode = menu.FirstChildElement("artists");
+	if(!currentNode) tft.print("'artist' node not found");
+	delay(500);
+	currentNode = currentNode->FirstChildElement("content");
+	if(!currentNode) tft.print("content node not found");
+	delay(500);
+
+	data_populateArtists(currentNode, songs.RootElement(), "artist");
+	delay(4000);
+	menu.SaveFile("system/data/menu.xml");
+
+
+	return 1;
+}
+
+bool data_listFiles(){
 	tinyxml2::XMLDocument songs;
 	fs::File music = SD_MMC.open("/music");
 	if(!music){
 		tft.println("/music does not exit.");
 		tft.println("Check SD card.");
-		return 1;
+		return DATA_FILE_ERR;
 	}
 
+	tft.println("Listing songs");
 	currentNode = songs.NewElement("songs");
+	currentNode = (tinyxml2::XMLElement*)songs.InsertFirstChild(currentNode);
 
+	fileID = new int32_t(0);
 	data_parseFolder(&music);
 	music.close();
-
+	delete fileID;
+	tft.println("Saving songs listing");
 	songs.SaveFile("/system/data/songs.xml");
 
-	delay(2000);
+	return DATA_OK;
+}
 
-	return 1;
+bool data_populateArtists(tinyxml2::XMLElement *node, tinyxml2::XMLElement *ref, const char *filter){
+	ref = ref->FirstChildElement();
+	if(!ref) tft.print("ref node problem !");
+	delay(500);
+	uint16_t i = 0;
+	for(;;){
+		const char *name = ref->FirstChildElement(filter)->GetText();
+		tft.printf("node %i, name : %s\n", i, name);
+		if(!(node->FirstChildElement(name))){
+			node = node->InsertNewChildElement("menu");
+			node->InsertNewChildElement("name")->InsertNewText(name);
+			node->InsertNewChildElement("type")->InsertNewText("menu");
+			ref = ref->NextSiblingElement();
+			if(!ref) break;
+			++i;
+		}
+	}
+	tft.printf("end of songs\n");
+	return 0;
+}
+
+bool data_sortMenu(){
+	return 0;
 }
 
 void data_parseFolder(fs::File *folder, uint8_t lvl){
+/*
 	for(uint8_t i = 0; i < lvl; ++i){
 		tft.print("  ");
 	}
+*/
 /*	
 	String name = folder->name();
 	int8_t index = name.lastIndexOf('/');
@@ -75,6 +135,7 @@ void data_parseFolder(fs::File *folder, uint8_t lvl){
 		}
 
 		if(file.isDirectory()){
+//			tft.printf("folder %s \n\t\tsize : %i\n", file.name(), file.size());
 			data_parseFolder(&file, lvl);
 		} else {
 /*
@@ -87,12 +148,23 @@ void data_parseFolder(fs::File *folder, uint8_t lvl){
 			index = name.lastIndexOf('/');
 			tft.println(name.substring(index + 1));
 */
-			tft.fillRect(0, 9, 320, 231, TFT_BLACK);
+/*			tft.fillRect(0, 9, 320, 231, TFT_BLACK);
 			tft.setCursor(1, 9);
 			tft.println(name);
-
+*/
 			if(!audio_getTag(&file)){
 				currentNode = currentNode->InsertNewChildElement("song");
+				currentNode->InsertNewChildElement("id")->SetText((*fileID)++);
+				currentNode->InsertNewChildElement("name");
+				currentNode->InsertNewChildElement("filename")->InsertNewText(file.name());
+				currentNode->InsertNewChildElement("album");
+				currentNode->InsertNewChildElement("artist");
+				currentNode->InsertNewChildElement("track");
+				currentNode->InsertNewChildElement("set");
+				currentNode->InsertNewChildElement("year");
+				currentNode->InsertNewChildElement("compilation");
+				currentNode->InsertNewChildElement("popmeter");
+
 				while(player->isRunning()){
 //					tft.print('.');
 					player->loop();
@@ -142,7 +214,7 @@ void data_menuWrite(){
 		} else {
 			active = 0;
 		}
-		display_makeMenuEntry(entry->Attribute("name"), active);
+		display_makeMenuEntry(entry->FirstChildElement("name")->GetText(), active);
 		if(entry == s->lastNode) break;
 		entry = entry->NextSiblingElement();
 	}
@@ -150,7 +222,7 @@ void data_menuWrite(){
 
 void data_menuEnter(){
 	levelState_t *s = &state[level];
-	const char *type = s->activeNode->Attribute("type");
+	const char *type = s->activeNode->FirstChildElement("type")->GetText();
 	const char *ref = "menu";
 	if(strcmp(type, ref) != 0){
 		Serial.println("type is not menu");
@@ -158,8 +230,8 @@ void data_menuEnter(){
 	}
 	++level;
 	bool update = true;
-	if(s->activeNode->FirstChildElement() == state[level].firstNode) update = false;
-	data_menuSetLevel(s->activeNode, update);
+	if(s->activeNode->FirstChildElement("content")->FirstChildElement("menu") == state[level].firstNode) update = false;
+	data_menuSetLevel(s->activeNode->FirstChildElement("content"), update);
 	data_menuWrite();
 }
 
@@ -191,14 +263,28 @@ void data_menuPrev(){
 }
 
 void data_getFileTags(void *cbData, const char *type, bool isUnicode, const char *string){
-	tft.print(type);tft.print(" : ");tft.println(string);
+//	tft.print(type);tft.print(" : ");tft.println(string);
 	
-	if(type == (const char*)"eof"){
+	if(type == (const char*)"Title"){
+		currentNode->FirstChildElement("name")->InsertNewText(string);
+	} else if(type == (const char*)"Album"){
+		currentNode->FirstChildElement("album")->InsertNewText(string);
+	} else if(type == (const char*)"Performer"){
+		currentNode->FirstChildElement("artist")->InsertNewText(string);
+	} else if(type == (const char*)"Year"){
+		currentNode->FirstChildElement("year")->InsertNewText(string);
+	} else if(type == (const char*)"Track"){
+		currentNode->FirstChildElement("track")->InsertNewText(string);
+	} else if(type == (const char*)"Set"){
+		currentNode->FirstChildElement("set")->InsertNewText(string);
+	} else if(type == (const char*)"Popularimeter"){
+		currentNode->FirstChildElement("popmeter")->InsertNewText(string);
+	} else if(type == (const char*)"Compilation"){
+		currentNode->FirstChildElement("compilation")->InsertNewText(string);
+	} else if(type == (const char*)"eof"){
 		((AudioFileSourceFS*)cbData)->close();
 //		player->stop();
 		currentNode = (tinyxml2::XMLElement*)currentNode->Parent();
 		return;
 	}
-
-	currentNode->SetAttribute(type, string);
 }
