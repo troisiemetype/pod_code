@@ -5,25 +5,6 @@ extern AudioFileSourceFS *audioFile;
 extern AudioGenerator *player;
 extern AudioOutputI2S *audioOutput;
 
-void audio_tagCB(void *cbData, const char *type, bool isUnicode, const char *string)
-{
-	(void)cbData;
-	audioLogger->printf("ID3 callback for: %s = '", type);
-
-	if (isUnicode) {
- 	   string += 2;
-	}
-  
-	while (*string) {
-		char a = *(string++);
-		if (isUnicode) {
-			string++;
-	    }
-	    audioLogger->printf("%c", a);
-	}
-	audioLogger->printf("'\n");
-}
-
 bool audio_getTag(fs::File* file){
 	String name = file->name();
 	if(!(name.endsWith(".mp3"))){

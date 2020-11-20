@@ -79,14 +79,14 @@ void setup(){
 
 //	audiometa_getTag("/music/tetris/tetris-gameboy-02.mp3");
 	io_initButtons();
-	if(data_initXML()){
+	if(data_initMenuStructure()){
 		sandbox();
 	}
-	tft.println("esPod initialized");
+//	tft.println("esPod initialized");
 	delay(500);
-	display_setRunningMode();
-	display_makeHeader();
-	data_menuWrite();
+//	display_setRunningMode();
+//	display_makeHeader();
+//	data_menuWrite();
 }
 
 void loop(){
