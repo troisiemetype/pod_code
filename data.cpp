@@ -62,9 +62,11 @@ void data_parseFolder(fs::File *folder, uint8_t lvl){
 		}
 
 		if(file.isDirectory()){
-//			tft.printf("folder %s \n\t\tsize : %i\n", file.name(), file.size());
+/*			tft.fillRect(0, 8, 320, 232, TFT_BLACK);
+			tft.setCursor(0, 8);
+			tft.printf("folder %s \t\tsize : %i\n", file.name(), file.size());
 			data_parseFolder(&file, lvl);
-		} else {
+*/		} else {
 /*
 			for(uint8_t i = 0; i < lvl; ++i){
 				tft.print("  ");
@@ -77,8 +79,8 @@ void data_parseFolder(fs::File *folder, uint8_t lvl){
 */
 /*			tft.fillRect(0, 9, 320, 231, TFT_BLACK);
 			tft.setCursor(1, 9);
-			tft.println(name);
-*/
+*/			tft.println(name);
+
 			if(!audio_getTag(&file)){
 				currentNode = currentNode->InsertNewChildElement("song");
 				currentNode->InsertNewChildElement("id")->SetText((*fileID)++);

@@ -25,11 +25,11 @@ void setup(){
 	display_initBacklight();
 	display_init();
 //	display_setRunningMode();
-//	tft.println("starting...");
+	tft.println("starting...");
 
-//	tft.println("init display");
+	tft.println("init display");
 
-//	tft.println("init SD card");
+	tft.println("init SD card");
 /*
 	for(uint8_t j = 0; j < 30; ++j){
 		for(uint8_t i = 0; i < 53; ++i){
@@ -39,14 +39,14 @@ void setup(){
 */
 
 	if (!SD_MMC.begin("")) {
-//		tft.println("Card Mount Failed");
+		tft.println("Card Mount Failed");
 		sandbox();
 		return;
 	}
 	uint8_t cardType = SD_MMC.cardType();
 
 	if (cardType == CARD_NONE) {
-//		tft.println("No SD card attached");
+		tft.println("No SD card attached");
 		sandbox();
 		return;
 	}
@@ -90,7 +90,7 @@ void setup(){
 	if(menu_init()){
 		sandbox();
 	}
-//	tft.println("esPod initialized");
+	tft.println("esPod initialized");
 	delay(500);
 //	display_setRunningMode();
 //	display_makeHeader();
