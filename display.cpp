@@ -1,5 +1,7 @@
 #include "display.h"
 
+// default "terminal" font is 53 * 30 (1590) characters to fill screen
+
 const uint8_t TFT_LED = 33;
 const int8_t TFT_LED_CH = 0;
 const int16_t TFT_LED_FREQ = 5000;
@@ -20,8 +22,8 @@ void display_setBackLight(uint8_t value){
 void display_init(){
 	tft.init();
 	tft.setRotation(1);
-	tft.setTextWrap(false, false);
-	tft.setCursor(3, 3);
+//	tft.setTextWrap(false, false);
+//	tft.setCursor(3, 3);
 	display_setTermMode();
 
 //	tft.println("esp pod");

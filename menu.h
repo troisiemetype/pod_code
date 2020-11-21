@@ -10,9 +10,6 @@
 bool menu_init();
 bool menu_createMusicSongs(MenuList *list, tinyxml2::XMLElement *currentNode);
 bool menu_createMusic(MenuList *list, MenuList *album, MenuList *ref);
-bool menu_createMusicAlbums(MenuList *parentList, MenuList *ref);
-bool menu_createMusicArtists(MenuList *parentList, MenuList *ref);
-bool menu_createMusicArtistsAlbums(MenuList *parentList, MenuList *ref);
 
 int16_t menu_sortByName(MenuItem *a, MenuItem *b);
 int16_t menu_sortByArtist(MenuItem *a, MenuItem *b);

@@ -20,12 +20,12 @@ void data_init(){
 bool data_listFiles(){
 	fs::File music = SD_MMC.open("/music");
 	if(!music){
-		tft.println("/music does not exit.");
-		tft.println("Check SD card.");
+//		tft.println("/music does not exit.");
+//		tft.println("Check SD card.");
 		return 1;
 	}
 
-	tft.println("Listing songs");
+//	tft.println("Listing songs");
 
 //	tinyxml2::XMLDocument songs;
 	currentNode = songData->NewElement("songs");
@@ -35,7 +35,7 @@ bool data_listFiles(){
 	data_parseFolder(&music);
 	music.close();
 	delete fileID;
-	tft.println("Saving songs listing");
+//	tft.println("Saving songs listing");
 	songData->SaveFile("/system/data/songs.xml");
 
 	return 0;

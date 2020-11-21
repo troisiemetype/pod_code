@@ -8,7 +8,7 @@ MenuList *menu;
 
 // Create main menu, call subroutines to parse levels.
 bool menu_init(){
-	tft.println("creating menu");
+//	tft.println("creating menu");
 
 	menu = new MenuList();
 
@@ -104,7 +104,7 @@ bool menu_init(){
 
 // Create the music/song menu, that will be the base for the other ones.
 bool menu_createMusicSongs(MenuList *list, tinyxml2::XMLElement *currentNode){
-	tft.println("parsing songs database");
+//	tft.println("parsing songs database");
 	MenuSong *song;
 	for(;;){
 		song = new MenuSong();
@@ -182,74 +182,6 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 		}
 		albums->sortExternal(menu_sortByName);
 	}
-	return 1;
-}
-
-bool menu_createMusicAlbums(MenuList* parentList, MenuList *ref){
-	ref->sortExternal(menu_sortByAlbum);
-	MenuSong *song = new MenuSong();
-	MenuSong *lastSong = (MenuSong*)ref->getLast();
-	*song = *(MenuSong*)(ref->getFirst());
-	MenuList *list = NULL;
-
-//	char *currentName = NULL;
-
-	for(;;){
-		if(strcmp(song->getAlbum(), lastSong->getAlbum())){
-//			currentName = (char*)song->getAlbum();
-//			Serial.printf("\nnew album : %s\n", song->getAlbum());
-//			Serial.printf("(previous   %s\n)", lastSong->getAlbum());
-
-			if(list) list->sortExternal(menu_sortByTrack);
-			list = new MenuList();
-			list->setName(song->getAlbum());
-			list->attachCallback(menu_listCB, NULL);
-			parentList->addChild(list);
-
-		}
-//		Serial.printf("song : %s ; album : %s\n", song->getName(), song->getAlbum());
-		list->addChild(song);
-
-		lastSong = song;
-		song = (MenuSong*)ref->getNext();
-		if(song == NULL){
-			list->sortExternal(menu_sortByTrack);
-			break;
-		}
-		song = new MenuSong(*song);
-	}
-	parentList->sortExternal(menu_sortByName);
-	return 1;
-}
-
-bool menu_createMusicArtists(MenuList* parentList, MenuList *ref){
-	ref->sortExternal(menu_sortByArtist);
-	MenuSong *song = new MenuSong();
-	MenuSong *lastSong = (MenuSong*)ref->getLast();
-	*song = *(MenuSong*)ref->getFirst();
-	MenuList *list = NULL;
-
-	for(;;){
-		if(strcmp(song->getArtist(), lastSong->getArtist())){
-//			if(list) list->sortExternal(menu_sortByName);
-			list = new MenuList();
-			list->setName(song->getArtist());
-			list->attachCallback(menu_listCB, NULL);
-			parentList->addChild(list);
-		}
-
-		lastSong = song;
-		song = (MenuSong*)ref->getNext();
-		if(song == NULL){
-//			list->sortExternal(menu_sortByName);
-			break;
-		}
-	}
-
-	return 1;
-}
-
-bool menu_createMusicArtistsAlbums(MenuList* parentList, MenuList *ref){
 	return 1;
 }
 

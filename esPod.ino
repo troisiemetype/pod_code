@@ -25,26 +25,33 @@ void setup(){
 	display_initBacklight();
 	display_init();
 //	display_setRunningMode();
-	tft.println("starting...");
+//	tft.println("starting...");
 
-	tft.println("init display");
+//	tft.println("init display");
 
-	tft.println("init SD card");
+//	tft.println("init SD card");
+/*
+	for(uint8_t j = 0; j < 30; ++j){
+		for(uint8_t i = 0; i < 53; ++i){
+			tft.print('#');
+		}
+	}
+*/
 
 	if (!SD_MMC.begin("")) {
-		tft.println("Card Mount Failed");
+//		tft.println("Card Mount Failed");
 		sandbox();
 		return;
 	}
 	uint8_t cardType = SD_MMC.cardType();
 
 	if (cardType == CARD_NONE) {
-		tft.println("No SD card attached");
+//		tft.println("No SD card attached");
 		sandbox();
 		return;
 	}
 
-	tft.print("SD Card Type: ");
+/*	tft.print("SD Card Type: ");
 	if (cardType == CARD_MMC) {
 		tft.println("MMC");
 	} else if (cardType == CARD_SD) {
@@ -54,13 +61,13 @@ void setup(){
 	} else {
 		tft.println("UNKNOWN");
 	}
-
+*/
 	uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
-	tft.printf("SD Card Size: %lluMB\n", cardSize);
+//	tft.printf("SD Card Size: %lluMB\n", cardSize);
 
 
 
-	tft.println("looking for xml file on SD");
+//	tft.println("looking for xml file on SD");
 /*	menuFile = new fs::File();
 	*menuFile = SD_MMC.open("/system/menu/menu.xml");
 	if(!menuFile){
