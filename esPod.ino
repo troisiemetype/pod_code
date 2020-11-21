@@ -79,14 +79,15 @@ void setup(){
 
 //	audiometa_getTag("/music/tetris/tetris-gameboy-02.mp3");
 	io_initButtons();
-	if(data_initMenuStructure()){
+	data_init();
+	if(menu_init()){
 		sandbox();
 	}
 //	tft.println("esPod initialized");
 	delay(500);
 //	display_setRunningMode();
 //	display_makeHeader();
-//	data_menuWrite();
+//	menu_menuWrite();
 }
 
 void loop(){
@@ -99,23 +100,23 @@ void loop(){
 
 	if(state & (1 << 1)){
 		if(io_justReleased(1)){
-			data_menuPrev();
-//			data_menuWrite();
+			menu_prev();
+//			menu_menuWrite();
 		}
 	} else if(state & (1 << 2)){
 		if(io_justReleased(2)){
-			data_menuEnter();
-//			data_menuWrite();
+			menu_enter();
+//			menu_menuWrite();
 		}
 	} else if(state & (1 << 3)){
 		if(io_justReleased(3)){
-			data_menuNext();
-//			data_menuWrite();
+			menu_next();
+//			menu_menuWrite();
 		}
 	} else if(state & (1 << 4)){
 		if(io_justReleased(4)){
-			data_menuExit();
-//			data_menuWrite();
+			menu_exit();
+//			menu_menuWrite();
 		}
 	}
 }

@@ -23,10 +23,8 @@
 #include "display.h"
 #include "files.h"
 #include "data.h"
+#include "menu.h"
 #include "music.h"
 #include "audio.h"
-
-
-
 
 #endif
