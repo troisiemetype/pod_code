@@ -2,13 +2,14 @@
 #define ESPOD_DISPLAY_H
 
 #include <Arduino.h>
+#include <TFT_eSPI.h>
 #include "esPod.h"
 
 // line height == 
 #define FONT_DEFAULT NotoSansBold15
 #define FONT_MENU
 
-#define COLOR_HEADER 		TFT_LIGHTGREY
+#define COLOR_HEADER 		TFT_SILVER
 #define COLOR_BG 			TFT_WHITE
 #define COLOR_TXT 			TFT_BLACK
 #define COLOR_BG_SELECT 	TFT_DARKGREEN
@@ -23,13 +24,20 @@ struct displaySetting_t{
 	String font;
 };
 
+void display_init();
+
+void display_update();
 void display_initBacklight();
 void display_setBackLight(uint8_t value);
-void display_init();
+
+uint8_t display_getMaxMenuItem();
+
 void display_setTermMode();
 void display_setRunningMode();
-void display_makeHeader();
-void display_makeMenuBG();
-void display_makeMenuEntry(const char *name, bool active = false);
+
+void display_makeHeader(const char *header);
+void display_pushToMenu(const char *name, bool active = false);
+void display_makeMenu(const char *name);
+void display_updateMenu();
 
 #endif

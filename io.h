@@ -5,14 +5,49 @@
 #include "esPod.h"
 #include "PushButton.h"
 
+void io_init();
 void io_initIO();
 
 void io_initButtons();
 
-uint8_t io_updateButtons();
+uint8_t io_update();
 bool io_isPressed(uint8_t btn);
 bool io_justReleased(uint8_t btn);
 
+void io_attachCBEnter(void (*fn)());
+void io_attachCBUp(void (*fn)());
+void io_attachCBDown(void (*fn)());
+void io_attachCBRight(void (*fn)());
+void io_attachCBLeft(void (*fn)());
 
+void io_attachCBEnterLong(void (*fn)());
+void io_attachCBUpLong(void (*fn)());
+void io_attachCBDownLong(void (*fn)());
+void io_attachCBRightLong(void (*fn)());
+void io_attachCBLeftLong(void (*fn)());
+
+void io_deattachCBEnter(void (*fn)());
+void io_deattachCBUp(void (*fn)());
+void io_deattachCBDown(void (*fn)());
+void io_deattachCBRight(void (*fn)());
+void io_deattachCBRLeft(void (*fn)());
+
+void io_deattachCBEnterLong(void (*fn)());
+void io_deattachCBUpLong(void (*fn)());
+void io_deattachCBDownLong(void (*fn)());
+void io_deattachCBRightLong(void (*fn)());
+void io_deattachCBLeftLong(void (*fn)());
+
+void _io_cbEnter();
+void _io_cbUp();
+void _io_cbDown();
+void _io_cbRight();
+void _io_cbLeft();
+
+void _io_cbEnterLong();
+void _io_cbUpLong();
+void _io_cbDownLong();
+void _io_cbRightLong();
+void _io_cbLeftLong();
 
 #endif

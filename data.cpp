@@ -2,14 +2,16 @@
 
 extern 	AudioGenerator *player;
 
-tinyxml2::XMLDocument *songData;
-tinyxml2::XMLElement *currentNode;
+using namespace tinyxml2;
+
+XMLDocument *songData;
+XMLElement *currentNode;
 
 int32_t *fileID = NULL;
 
 
 void data_init(){
-	songData = new tinyxml2::XMLDocument();
+	songData = new XMLDocument();
 	if(!SD_MMC.exists("/system/data/songs.xml")){
 		data_listFiles();
 	}
@@ -27,9 +29,9 @@ bool data_listFiles(){
 
 //	tft.println("Listing songs");
 
-//	tinyxml2::XMLDocument songs;
+//	XMLDocument songs;
 	currentNode = songData->NewElement("songs");
-	currentNode = (tinyxml2::XMLElement*)songData->InsertFirstChild(currentNode);
+	currentNode = (XMLElement*)songData->InsertFirstChild(currentNode);
 
 	fileID = new int32_t(0);
 	data_parseFolder(&music);
@@ -108,7 +110,7 @@ void data_parseFolder(fs::File *folder, uint8_t lvl){
 	}
 }
 
-tinyxml2::XMLElement* data_getSongList(){
+XMLElement* data_getSongList(){
 	if(songData->LoadFile("/system/data/songs.xml")){
 		return NULL;
 	}
@@ -139,7 +141,7 @@ void data_getFileTags(void *cbData, const char *type, bool isUnicode, const char
 	} else if(type == (const char*)"eof"){
 		((AudioFileSourceFS*)cbData)->close();
 //		player->stop();
-		currentNode = (tinyxml2::XMLElement*)currentNode->Parent();
+		currentNode = (XMLElement*)currentNode->Parent();
 		return;
 	}
 }

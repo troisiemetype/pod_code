@@ -1,6 +1,5 @@
 #include "esPod.h"
 
-TFT_eSPI tft = TFT_eSPI();
 
 AudioFileSourceFS *audioFile;
 AudioFileSourceID3 *audioTags;
@@ -11,25 +10,24 @@ void sandbox(){
 	delay(2000);
 	tft.fillScreen(TFT_BLACK);
 	tft.setCursor(0, 0);
-	tft.println("esPod could not be init...");
+//	tft.println("esPod could not be init...");
 	for(;;);
 }
 
 void setup(){
 
-	io_initIO();
+	io_init();
 
 	Serial.begin(115200);
 //	audioLogger = &tft;
 
-	display_initBacklight();
 	display_init();
 //	display_setRunningMode();
-	tft.println("starting...");
+//	tft.println("starting...");
 
-	tft.println("init display");
+//	tft.println("init display");
 
-	tft.println("init SD card");
+//	tft.println("init SD card");
 /*
 	for(uint8_t j = 0; j < 30; ++j){
 		for(uint8_t i = 0; i < 53; ++i){
@@ -39,14 +37,14 @@ void setup(){
 */
 
 	if (!SD_MMC.begin("")) {
-		tft.println("Card Mount Failed");
+//		tft.println("Card Mount Failed");
 		sandbox();
 		return;
 	}
 	uint8_t cardType = SD_MMC.cardType();
 
 	if (cardType == CARD_NONE) {
-		tft.println("No SD card attached");
+//		tft.println("No SD card attached");
 		sandbox();
 		return;
 	}
@@ -85,45 +83,18 @@ void setup(){
 	player = new AudioGeneratorMP3();
 
 //	audiometa_getTag("/music/tetris/tetris-gameboy-02.mp3");
-	io_initButtons();
 	data_init();
 	if(menu_init()){
 		sandbox();
 	}
-	tft.println("esPod initialized");
-	delay(500);
+//	display_setRunningMode();
+//	tft.println("esPod initialized");
+//	delay(500);
 //	display_setRunningMode();
 //	display_makeHeader();
 //	menu_menuWrite();
 }
 
 void loop(){
-	/*
-	if(player->isRunning()){
-		if(!player->loop()) player->stop();
-	}
-	*/
-	uint8_t state = io_updateButtons();
-
-	if(state & (1 << 1)){
-		if(io_justReleased(1)){
-			menu_prev();
-//			menu_menuWrite();
-		}
-	} else if(state & (1 << 2)){
-		if(io_justReleased(2)){
-			menu_enter();
-//			menu_menuWrite();
-		}
-	} else if(state & (1 << 3)){
-		if(io_justReleased(3)){
-			menu_next();
-//			menu_menuWrite();
-		}
-	} else if(state & (1 << 4)){
-		if(io_justReleased(4)){
-			menu_exit();
-//			menu_menuWrite();
-		}
-	}
+	io_update();
 }

@@ -1,58 +1,60 @@
 #include "menu.h"
 
-// using namespace tinyxml2;
-
-uint8_t maxMenuItem = 10;
+using namespace tinyxml2;
 
 MenuList *menu;
+
+uint8_t maxMenuItem;
 
 // Create main menu, call subroutines to parse levels.
 bool menu_init(){
 //	tft.println("creating menu");
 
+	maxMenuItem = display_getMaxMenuItem();
+
 	menu = new MenuList();
 
 	menu->setDisplaySize(maxMenuItem);
 	menu->setName("esPod");
-	menu->attachCallback(menu_listCB, NULL);
+	menu->attachCallback(menu_cbList, NULL);
 
 	MenuItem *i = new MenuItem();
 	i->setName("playing");
 	menu->addChild(i);
 
 	MenuList *music = new MenuList();
-	music->attachCallback(menu_listCB, NULL);
+	music->attachCallback(menu_cbList, NULL);
 	music->setName("music");
 	menu->addChild(music);
 
 	MenuList *artists = new MenuList();
-	artists->attachCallback(menu_listCB, NULL);
+	artists->attachCallback(menu_cbList, NULL);
 	artists->setName("artists");
 	music->addChild(artists);
 
 	MenuList *albums = new MenuList();
-	albums->attachCallback(menu_listCB, NULL);
+	albums->attachCallback(menu_cbList, NULL);
 	albums->setName("albums");
 	music->addChild(albums);
 
 	MenuList *songs = new MenuList();
-	songs->attachCallback(menu_listCB, NULL);
+	songs->attachCallback(menu_cbList, NULL);
 	songs->setName("songs");
 	music->addChild(songs);
 
 	MenuList *compilations = new MenuList();
-	compilations->attachCallback(menu_listCB, NULL);
+	compilations->attachCallback(menu_cbList, NULL);
 	compilations->setName("compilations");
 	music->addChild(compilations);
 
 	MenuList *playlists = new MenuList();
-	playlists->attachCallback(menu_listCB, NULL);
+	playlists->attachCallback(menu_cbList, NULL);
 	playlists->setName("playlists");
 	music->addChild(playlists);
 
 
 	MenuList *settings = new MenuList();
-	settings->attachCallback(menu_listCB, NULL);
+	settings->attachCallback(menu_cbList, NULL);
 	settings->setName("settings");
 	menu->addChild(settings);
 
@@ -76,7 +78,7 @@ bool menu_init(){
 	equalizer->setName("equalizer");
 	settings->addChild(equalizer);
 
-	tinyxml2::XMLElement *currentNode = data_getSongList();
+	XMLElement *currentNode = data_getSongList();
 
 	menu_createMusicSongs(songs, currentNode);
 
@@ -93,17 +95,14 @@ bool menu_init(){
 */
 
 //	return 1;
-
-	display_setRunningMode();
-	display_makeHeader();
-
-	menu_write(menu);
+//	menu_write(menu);
+	menu_cbList(menu);
 	return 0;
 
 }
 
 // Create the music/song menu, that will be the base for the other ones.
-bool menu_createMusicSongs(MenuList *list, tinyxml2::XMLElement *currentNode){
+bool menu_createMusicSongs(MenuList *list, XMLElement *currentNode){
 //	tft.println("parsing songs database");
 	MenuSong *song;
 	for(;;){
@@ -115,7 +114,7 @@ bool menu_createMusicSongs(MenuList *list, tinyxml2::XMLElement *currentNode){
 		song->setTrack(menu_getXMLNumberField(currentNode, "track"));
 		song->setSet(menu_getXMLNumberField(currentNode, "set"));
 		song->setYear(menu_getXMLNumberField(currentNode, "year"));
-		song->attachCallback(menu_songCB, NULL);
+		song->attachCallback(menu_cbSong, NULL);
 		list->addChild(song);
 
 		currentNode = currentNode->NextSiblingElement();
@@ -142,7 +141,7 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 		Serial.printf("%s\n", song->getArtist());
 		listArtists = new MenuList();
 		listArtists->setName(song->getArtist());
-		listArtists->attachCallback(menu_listCB, NULL);
+		listArtists->attachCallback(menu_cbList, NULL);
 		artists->addChild(listArtists);
 
 		// albums parsing
@@ -150,12 +149,12 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 			Serial.printf("\t%s\n", song->getAlbum());
 			listAlbums = new MenuList();
 			listAlbums->setName(song->getAlbum());
-			listAlbums->attachCallback(menu_listCB, NULL);
+			listAlbums->attachCallback(menu_cbList, NULL);
 			albums->addChild(listAlbums);
 
 			listArtistsAlbums = new MenuList();
 			listArtistsAlbums->setName(song->getAlbum());
-			listArtistsAlbums->attachCallback(menu_listCB, NULL);
+			listArtistsAlbums->attachCallback(menu_cbList, NULL);
 			listArtists->addChild(listArtistsAlbums);
 
 			// songs parsing
@@ -217,20 +216,22 @@ int16_t menu_sortRank(MenuItem *a, MenuItem *b){
 // TODO : see if using a sprite could avoid flickering.
 void menu_write(MenuList *list){
 //	Serial.printf("making menu %s\n", list->getName());
-	display_makeMenuBG();
+//	display_makeMenuBG();
+	display_makeMenu(list->getName());
 	MenuItem *item = list->getFirstDisplay();
 //	Serial.printf("menu @ %i\n", (int32_t)list);
 //	Serial.printf("focus @ %i\n", (int32_t)list->getFocus());
 	for(uint8_t i = 0; i < maxMenuItem; ++i){
 //		Serial.printf("item @ %i, named %s, focus : %i\n", (int32_t)item, item->getName(), item->hasFocus());
-		display_makeMenuEntry(item->getName(), item->hasFocus());
+		display_pushToMenu(item->getName(), item->hasFocus());
 		item = list->getNext();
 		if(item == NULL) break;
 	}
+	display_updateMenu();
 }
 
 // Enter selected menu item.
-// MenuItem::exec() is volatile, and will call the appropriate callback for each derivate of the class.
+// MenuItem::exec() is virtual, and will call the appropriate callback for each derivate of the class.
 void menu_enter(){
 	menu->getFocus()->exec();
 }
@@ -256,23 +257,28 @@ void menu_prev(){
 }
 
 // The callback function to be attached to MenuList objects, when selecting them.
-void menu_listCB(void* list){
+void menu_cbList(void* list){
+	io_attachCBUp(menu_prev);
+	io_attachCBDown(menu_next);
+	io_attachCBRight(menu_enter);
+	io_attachCBLeft(menu_exit);
+
 	menu = (MenuList*)list;
 	menu_write(menu);
 }
 
 // The callback function to be attached to MenuItem objects, when selecting them.
-void menu_songCB(void *data){
+void menu_cbSong(void *data){
 //	tft.print("song called");
 }
 
-const char* menu_getXMLTextField(tinyxml2::XMLElement *node, const char *field){
+const char* menu_getXMLTextField(XMLElement *node, const char *field){
 	const char *name = node->FirstChildElement(field)->GetText();
 	if(name) return name;
 	return " ";
 }
 
-int16_t menu_getXMLNumberField(tinyxml2::XMLElement *node, const char *field){
+int16_t menu_getXMLNumberField(XMLElement *node, const char *field){
 	int value = 0;
 	node->FirstChildElement(field)->QueryIntText(&value);
 //	value = node->IntAttribute(field);

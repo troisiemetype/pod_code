@@ -10,14 +10,6 @@
 	#include "SPIFFS.h"
 #endif
 
-#include "AudioFileSource.h"
-#include "AudioFileSourceID3.h"
-#include "AudioFileSourceFS.h"
-#include "AudioGeneratorWAV.h"
-#include "AudioGeneratorMP3.h"
-#include "AudioOutputI2S.h"
-
-
 #include "io.h"
 #include "fonts.h"
 #include "display.h"

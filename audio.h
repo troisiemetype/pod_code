@@ -3,8 +3,13 @@
 
 #include <Arduino.h>
 #include "esPod.h"
-
-extern TFT_eSPI tft;
+#include <FS.h>
+#include "AudioFileSource.h"
+#include "AudioFileSourceID3.h"
+#include "AudioFileSourceFS.h"
+#include "AudioGeneratorWAV.h"
+#include "AudioGeneratorMP3.h"
+#include "AudioOutputI2S.h"
 
 bool audio_getTag(fs::File *file);
 
