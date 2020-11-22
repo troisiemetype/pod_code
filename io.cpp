@@ -8,6 +8,10 @@ const uint8_t BTN_RIGHT = 36;
 const uint8_t BTN_DOWN = 35;
 const uint8_t BTN_LEFT = 39;
 
+const uint8_t WHEEL_0 = 33;
+const uint8_t WHEEL_1 = 32;
+const uint8_t WHEEL_2 = 27;
+
 void (*_io_cbfnEnter)(void) = NULL;
 void (*_io_cbfnUp)(void) = NULL;
 void (*_io_cbfnDown)(void) = NULL;
@@ -20,16 +24,14 @@ void (*_io_cbfnRightLong)(void) = NULL;
 void (*_io_cbfnLeftLong)(void) = NULL;
 
 PushButton button[NB_BUTTONS];
-/*
-PushButton btnCenter;
-PushButton btnUp;
-PushButton btnRight;
-PushButton btnDown;
-PushButton btnLeft;
-*/
+
+TouchWheel wheel = TouchWheel(WHEEL_0, WHEEL_1, WHEEL_2);
+
 void io_init(){
 	io_initIO();
 	io_initButtons();
+	wheel.init();
+	wheel.setSteps(8);
 }
 
 void io_initIO(){
@@ -55,9 +57,15 @@ void io_initButtons(){
 	button[4].begin(BTN_LEFT, PULLUP);
 }
 
-uint8_t io_update(){
-//	uint8_t state = 0;
+void io_update(){
+	io_updateButtons();
+	if(wheel.update()){
+		Serial.printf("pos : %i\t step : %i\n", wheel.getPosition(), wheel.getStep());
+	}
 
+}
+
+void io_updateButtons(){
 	for(uint8_t i = 0; i < NB_BUTTONS; ++i){
 //		state |= (button[i].update() << i);
 		if(button[i].update()){
@@ -100,17 +108,11 @@ uint8_t io_update(){
 			}
 		}
 	}
-
-//	return state;
-	return 0;
+	return;
 }
 
-bool io_isPressed(uint8_t btn){
-	return button[btn].justPressed();
-}
+void io_updateWheel(){
 
-bool io_justReleased(uint8_t btn){
-	return button[btn].justReleased();
 }
 
 void io_attachCBEnter(void (*fn)())			{_io_cbfnEnter = fn;}
@@ -125,17 +127,17 @@ void io_attachCBDownLong(void (*fn)())		{_io_cbfnDownLong = fn;}
 void io_attachCBRightLong(void (*fn)())		{_io_cbfnRightLong = fn;}
 void io_attachCBLeftLong(void (*fn)())		{_io_cbfnLeftLong = fn;}
 
-void io_deattachCBEnter(void (*fn)())		{_io_cbfnEnter = NULL;}
-void io_deattachCBUp(void (*fn)())			{_io_cbfnUp = NULL;}
-void io_deattachCBDown(void (*fn)())		{_io_cbfnDown = NULL;}
-void io_deattachCBRight(void (*fn)())		{_io_cbfnRight = NULL;}
-void io_deattachCBRLeft(void (*fn)())		{_io_cbfnLeft = NULL;}
+void io_deattachCBEnter()		{_io_cbfnEnter = NULL;}
+void io_deattachCBUp()			{_io_cbfnUp = NULL;}
+void io_deattachCBDown()		{_io_cbfnDown = NULL;}
+void io_deattachCBRight()		{_io_cbfnRight = NULL;}
+void io_deattachCBLeft()		{_io_cbfnLeft = NULL;}
 
-void io_deattachCBEnterLong(void (*fn)())	{_io_cbfnEnterLong = NULL;}
-void io_deattachCBUpLong(void (*fn)())		{_io_cbfnUpLong = NULL;}
-void io_deattachCBDownLong(void (*fn)())	{_io_cbfnDownLong = NULL;}
-void io_deattachCBRightLong(void (*fn)())	{_io_cbfnRightLong = NULL;}
-void io_deattachCBLeftLong(void (*fn)())	{_io_cbfnLeftLong = NULL;}
+void io_deattachCBEnterLong()	{_io_cbfnEnterLong = NULL;}
+void io_deattachCBUpLong()		{_io_cbfnUpLong = NULL;}
+void io_deattachCBDownLong()	{_io_cbfnDownLong = NULL;}
+void io_deattachCBRightLong()	{_io_cbfnRightLong = NULL;}
+void io_deattachCBLeftLong()	{_io_cbfnLeftLong = NULL;}
 
 void _io_cbEnter()		{if(_io_cbfnEnter) 	(*_io_cbfnEnter)();}
 void _io_cbUp()			{if(_io_cbfnUp) 	(*_io_cbfnUp)();}

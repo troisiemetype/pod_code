@@ -62,15 +62,15 @@ pin list
 22		I2S WS
 23		TFT MOSI
 24			not exposed
-25		wheel touch 1
-26		wheel touch 2
-27		wheel touch 3
+25		TFT dc
+26		TFT led
+27		wheel touch 1
 28			not exposed
 29			not exposed
 30			not exposed
 31			not exposed
-32		TFT DC
-33		TFT led
+32		wheel touch 2
+33		wheel touch 3
 34		btn up 	(external pullup needed)
 35		btn down 	(external pullup needed)
 36		btn right 			(external pullup needed)

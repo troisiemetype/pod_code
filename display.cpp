@@ -4,7 +4,7 @@
 
 TFT_eSPI tft = TFT_eSPI();
 
-const uint8_t TFT_LED = 33;
+const uint8_t TFT_LED = 26;
 const int8_t TFT_LED_CH = 0;
 const int16_t TFT_LED_FREQ = 5000;
 const int8_t TFT_LED_RES = 8;
@@ -18,6 +18,8 @@ TFT_eSprite menuSprite = TFT_eSprite(&tft);
 TFT_eSprite entrySprite = TFT_eSprite(&tft);
 TFT_eSprite headerSprite = TFT_eSprite(&tft);
 
+TFT_eSprite vuSprite = TFT_eSprite(&tft);
+
 void display_init(){
 	display_initBacklight();
 	tft.init();
@@ -29,6 +31,7 @@ void display_init(){
 	menuSprite.setColorDepth(16);
 	entrySprite.setColorDepth(16);
 	headerSprite.setColorDepth(16);
+	vuSprite.setColorDepth(16);
 
 	display_maxMenuItem = 10;
 
@@ -69,10 +72,18 @@ void display_setTermMode(){
 void display_setRunningMode(){
 	tft.fillScreen(COLOR_BG);
 	tft.setTextColor(COLOR_TXT, COLOR_BG);
-	tft.loadFont(NotoSansBold16);
+//	tft.loadFont(NotoSansBold16);
 //	tft.printf("line height : %i\n", tft.fontHeight());
 //	String filename = "system/fonts/NotoSansMono14";
 //	tft.loadFont(filename, SD_MMC);
+}
+
+void display_clearDisplay(){
+	tft.fillRect(0, 20, 320, 220, COLOR_BG);	
+}
+
+void display_clearAll(){
+	tft.fillScreen(COLOR_BG);
 }
 
 void display_makeHeader(const char *header){
@@ -123,3 +134,18 @@ void display_updateMenu(){
 	}
 }
 
+void display_makePlayer(){
+
+}
+
+void display_vuMeter(float value, uint16_t x, uint16_t y, uint16_t width = 200){
+	if(value < 0) value = 0;
+	if(value > 1) value = 1;
+	uint16_t dspValue = value * width;
+	vuSprite.createSprite(width, 16);
+	vuSprite.fillSprite(COLOR_BG);
+	vuSprite.drawRoundRect(0, 0, width, 16, 3, TFT_DARKGREEN);
+	vuSprite.fillRoundRect(1, 1, dspValue - 2, 14, 2, COLOR_BG_SELECT);
+	vuSprite.pushSprite(x, y);
+
+}

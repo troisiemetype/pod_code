@@ -16,9 +16,10 @@ void sandbox(){
 
 void setup(){
 
+	Serial.begin(115200);
+
 	io_init();
 
-	Serial.begin(115200);
 //	audioLogger = &tft;
 
 	display_init();
@@ -60,7 +61,7 @@ void setup(){
 		tft.println("UNKNOWN");
 	}
 */
-	uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
+//	uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
 //	tft.printf("SD Card Size: %lluMB\n", cardSize);
 
 

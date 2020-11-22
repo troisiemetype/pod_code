@@ -6,6 +6,8 @@ MenuList *menu;
 
 uint8_t maxMenuItem;
 
+float testValue = 0.5;
+
 // Create main menu, call subroutines to parse levels.
 bool menu_init(){
 //	tft.println("creating menu");
@@ -57,6 +59,11 @@ bool menu_init(){
 	settings->attachCallback(menu_cbList, NULL);
 	settings->setName("settings");
 	menu->addChild(settings);
+
+	MenuItem *test = new MenuItem();
+	test->attachCallback(menu_cbTest, NULL);
+	test->setName("test");
+	menu->addChild(test);
 
 	MenuList *brightness = new MenuList();
 	brightness->setName("brightness");
@@ -138,7 +145,7 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 //		Serial.printf("%i\t | %s\t\t | %s\t\t | %s\t\t\n", song->getTrack(), song->getArtist(), song->getAlbum(), song->getName());
 	// artists parsing
 	for(;;){
-		Serial.printf("%s\n", song->getArtist());
+//		Serial.printf("%s\n", song->getArtist());
 		listArtists = new MenuList();
 		listArtists->setName(song->getArtist());
 		listArtists->attachCallback(menu_cbList, NULL);
@@ -146,7 +153,7 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 
 		// albums parsing
 		for(;;){
-			Serial.printf("\t%s\n", song->getAlbum());
+//			Serial.printf("\t%s\n", song->getAlbum());
 			listAlbums = new MenuList();
 			listAlbums->setName(song->getAlbum());
 			listAlbums->attachCallback(menu_cbList, NULL);
@@ -159,7 +166,7 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 
 			// songs parsing
 			for(;;){
-				Serial.printf("\t\t%s\n", song->getName());
+//				Serial.printf("\t\t%s\n", song->getName());
 				listAlbums->addChild(new MenuSong(*song));
 				listArtistsAlbums->addChild(new MenuSong(*song));
 
@@ -254,6 +261,38 @@ void menu_next(){
 void menu_prev(){
 	if(!menu->focusPreviousItem()) return;
 	menu_write(menu);
+}
+
+void menu_test(){
+	display_vuMeter(testValue, 40, 190, 240);
+}
+
+void menu_testExit(){
+	menu_cbList(menu);
+}
+
+void menu_testValuePlus(){
+	testValue += 0.02;
+	menu_test();
+}
+
+void menu_testValueMinus(){
+	testValue -= 0.02;
+	menu_test();
+}
+
+void menu_testValueMiddle(){
+	testValue = 0.5;
+	menu_test();
+}
+
+void menu_cbTest(void *empty){
+	io_attachCBUp(menu_testExit);
+	io_attachCBDown(menu_testValueMiddle);
+	io_attachCBRight(menu_testValuePlus);
+	io_attachCBLeft(menu_testValueMinus);
+	display_clearDisplay();
+	menu_test();
 }
 
 // The callback function to be attached to MenuList objects, when selecting them.

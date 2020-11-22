@@ -4,15 +4,18 @@
 #include <Arduino.h>
 #include "esPod.h"
 #include "PushButton.h"
+#include "wheel.h"
 
 void io_init();
 void io_initIO();
 
 void io_initButtons();
+void io_initWheel();
 
-uint8_t io_update();
-bool io_isPressed(uint8_t btn);
-bool io_justReleased(uint8_t btn);
+void io_update();
+
+void io_updateButtons();
+void io_updateWheel();
 
 void io_attachCBEnter(void (*fn)());
 void io_attachCBUp(void (*fn)());
@@ -26,17 +29,17 @@ void io_attachCBDownLong(void (*fn)());
 void io_attachCBRightLong(void (*fn)());
 void io_attachCBLeftLong(void (*fn)());
 
-void io_deattachCBEnter(void (*fn)());
-void io_deattachCBUp(void (*fn)());
-void io_deattachCBDown(void (*fn)());
-void io_deattachCBRight(void (*fn)());
-void io_deattachCBRLeft(void (*fn)());
+void io_deattachCBEnter();
+void io_deattachCBUp();
+void io_deattachCBDown();
+void io_deattachCBRight();
+void io_deattachCBLeft();
 
-void io_deattachCBEnterLong(void (*fn)());
-void io_deattachCBUpLong(void (*fn)());
-void io_deattachCBDownLong(void (*fn)());
-void io_deattachCBRightLong(void (*fn)());
-void io_deattachCBLeftLong(void (*fn)());
+void io_deattachCBEnterLong();
+void io_deattachCBUpLong();
+void io_deattachCBDownLong();
+void io_deattachCBRightLong();
+void io_deattachCBLeftLong();
 
 void _io_cbEnter();
 void _io_cbUp();

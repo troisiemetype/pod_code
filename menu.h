@@ -25,7 +25,14 @@ void menu_exit();
 void menu_next();
 void menu_prev();
 
-void menu_cbList(void* list);
+void menu_test();
+void menu_testExit();
+void menu_testValuePlus();
+void menu_testValueMinus();
+void menu_testValueMiddle();
+void menu_cbTest(void *empty);
+
+void menu_cbList(void *list);
 void menu_cbSong(void *data);
 
 const char* menu_getXMLTextField(tinyxml2::XMLElement *node, const char *field);

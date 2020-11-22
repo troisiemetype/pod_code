@@ -35,9 +35,16 @@ uint8_t display_getMaxMenuItem();
 void display_setTermMode();
 void display_setRunningMode();
 
+void display_clearDisplay();
+void display_clearAll();
+
 void display_makeHeader(const char *header);
 void display_pushToMenu(const char *name, bool active = false);
 void display_makeMenu(const char *name);
 void display_updateMenu();
+
+void display_makePlayer();
+
+void display_vuMeter(float value, uint16_t x, uint16_t y, uint16_t width);
 
 #endif
