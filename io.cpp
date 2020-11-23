@@ -23,6 +23,9 @@ void (*_io_cbfnDownLong)(void) = NULL;
 void (*_io_cbfnRightLong)(void) = NULL;
 void (*_io_cbfnLeftLong)(void) = NULL;
 
+void (*_io_cbfnWheelClk)(void) = NULL;
+void (*_io_cbfnWheelCClk)(void) = NULL;
+
 PushButton button[NB_BUTTONS];
 
 TouchWheel wheel = TouchWheel(WHEEL_0, WHEEL_1, WHEEL_2);
@@ -30,8 +33,12 @@ TouchWheel wheel = TouchWheel(WHEEL_0, WHEEL_1, WHEEL_2);
 void io_init(){
 	io_initIO();
 	io_initButtons();
+//	__touchInint();
+//	touchSetCycles(uint16_t measure, uint16_t sleep);
+	touchSetCycles(0xF00, 0x1000);
+
 	wheel.init();
-	wheel.setSteps(8);
+	wheel.setSteps(32);
 }
 
 void io_initIO(){
@@ -60,7 +67,12 @@ void io_initButtons(){
 void io_update(){
 	io_updateButtons();
 	if(wheel.update()){
-		Serial.printf("pos : %i\t step : %i\n", wheel.getPosition(), wheel.getStep());
+		int8_t steps = wheel.getStep();
+		if(steps > 0){
+			_io_cbfnWheelClk();
+		} else if(steps < 0){
+			_io_cbfnWheelCClk();
+		}
 	}
 
 }
@@ -127,6 +139,9 @@ void io_attachCBDownLong(void (*fn)())		{_io_cbfnDownLong = fn;}
 void io_attachCBRightLong(void (*fn)())		{_io_cbfnRightLong = fn;}
 void io_attachCBLeftLong(void (*fn)())		{_io_cbfnLeftLong = fn;}
 
+void io_attachCBWheelClockwise(void (*fn)())		{_io_cbfnWheelClk = fn;}
+void io_attachCBWheelCounterClockwise(void (*fn)())	{_io_cbfnWheelCClk = fn;}
+
 void io_deattachCBEnter()		{_io_cbfnEnter = NULL;}
 void io_deattachCBUp()			{_io_cbfnUp = NULL;}
 void io_deattachCBDown()		{_io_cbfnDown = NULL;}
@@ -139,6 +154,9 @@ void io_deattachCBDownLong()	{_io_cbfnDownLong = NULL;}
 void io_deattachCBRightLong()	{_io_cbfnRightLong = NULL;}
 void io_deattachCBLeftLong()	{_io_cbfnLeftLong = NULL;}
 
+void io_deattachCBWheelClockwise()			{_io_cbfnWheelClk = NULL;}
+void io_deattachCBWheelCounterClockwise()	{_io_cbfnWheelCClk = NULL;}
+
 void _io_cbEnter()		{if(_io_cbfnEnter) 	(*_io_cbfnEnter)();}
 void _io_cbUp()			{if(_io_cbfnUp) 	(*_io_cbfnUp)();}
 void _io_cbDown()		{if(_io_cbfnDown) 	(*_io_cbfnDown)();}
@@ -150,3 +168,6 @@ void _io_cbUpLong()		{if(_io_cbfnUpLong)		(*_io_cbfnUpLong)();}
 void _io_cbDownLong()	{if(_io_cbfnDownLong)	(*_io_cbfnDownLong)();}
 void _io_cbRightLong()	{if(_io_cbfnRightLong) 	(*_io_cbfnRightLong)();}
 void _io_cbLeftLong()	{if(_io_cbfnLeftLong)	(*_io_cbfnLeftLong)();}
+
+void _io_cbWheelClockwise()			{if(_io_cbfnWheelClk)	(*_io_cbfnWheelClk)();}
+void _io_cbWheelCounterClockwise()	{if(_io_cbfnWheelCClk)	(*_io_cbfnWheelCClk)();}

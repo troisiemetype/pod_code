@@ -297,8 +297,10 @@ void menu_cbTest(void *empty){
 
 // The callback function to be attached to MenuList objects, when selecting them.
 void menu_cbList(void* list){
-	io_attachCBUp(menu_prev);
-	io_attachCBDown(menu_next);
+	io_attachCBWheelClockwise(menu_next);
+	io_attachCBWheelCounterClockwise(menu_prev);
+//	io_attachCBUp(menu_prev);
+//	io_attachCBDown(menu_next);
 	io_attachCBRight(menu_enter);
 	io_attachCBLeft(menu_exit);
 

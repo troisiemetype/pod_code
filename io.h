@@ -29,6 +29,9 @@ void io_attachCBDownLong(void (*fn)());
 void io_attachCBRightLong(void (*fn)());
 void io_attachCBLeftLong(void (*fn)());
 
+void io_attachCBWheelClockwise(void (*fn)());
+void io_attachCBWheelCounterClockwise(void (*fn)());
+
 void io_deattachCBEnter();
 void io_deattachCBUp();
 void io_deattachCBDown();
@@ -41,6 +44,9 @@ void io_deattachCBDownLong();
 void io_deattachCBRightLong();
 void io_deattachCBLeftLong();
 
+void io_deattachCBWheelClockwise();
+void io_deattachCBWheelCounterClockwise();
+
 void _io_cbEnter();
 void _io_cbUp();
 void _io_cbDown();
@@ -52,5 +58,8 @@ void _io_cbUpLong();
 void _io_cbDownLong();
 void _io_cbRightLong();
 void _io_cbLeftLong();
+
+void _io_cbWheelClockwise();
+void _io_cbWheelCounterClockwise();
 
 #endif

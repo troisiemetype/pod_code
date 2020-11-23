@@ -29,7 +29,7 @@ void TouchWheel::init(){
 	_timeRising = 10000;
 	_timeFalling = 2000;
 
-	_filterWeight = 40;
+	_filterWeight = 30;
 
 	tuneBaseline(32);
 	tuneThreshold(32);
@@ -89,8 +89,8 @@ void TouchWheel::tuneThreshold(uint8_t cycles){
 
 	delta /= _channels;
 
-	_thresholdRising = (float)delta * 0.5;
-	_thresholdFalling = (float)delta * 0.3;
+	_thresholdRising = (float)delta * 0.6;
+	_thresholdFalling = (float)delta * 0.6;
 //	Serial.printf("max delta :\t%i\n", delta);
 //	Serial.printf("threshold rising:\t%i\n", _thresholdRising);
 //	Serial.printf("threshold falling:\t%i\n", _thresholdFalling);
@@ -110,7 +110,7 @@ int8_t TouchWheel::getStep(){
 	int8_t steps = 0;
 	if(abs(_stepCounter) > _steps){
 		steps = _stepCounter / _steps;
-		_stepCounter %= steps;
+		_stepCounter = 0;
 	}
 	return steps;
 }
