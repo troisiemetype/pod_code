@@ -5,12 +5,10 @@
 
 class TouchWheel{
 public:
-	TouchWheel(uint8_t pin0, uint8_t pin1, uint8_t pin2);
+	TouchWheel(uint8_t pin0, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, uint8_t pin5);
 	~TouchWheel();
 
 	void init();
-
-	void setSteps(uint8_t steps);
 
 	void tuneBaseline(uint8_t cycles = 16);
 	void tuneThreshold(uint8_t cycles = 16);
@@ -32,20 +30,19 @@ private:
 
 	bool updateRead();
 	void updateCal(uint8_t channel);
-	const uint8_t _channels = 3;
+	const uint8_t _channels = 6;
 
-	uint8_t _pin[3];
+	uint8_t _pin[6];
 
-	uint16_t _current[4];
-	uint16_t _previous[4];
-	int16_t _delta[4];
-	uint16_t _baseline[4];
-	uint16_t _weight[3];
+	uint16_t _current[6];
+	uint16_t _previous[6];
+	int16_t _delta[6];
+	uint16_t _baseline[6];
 
-	state_t _prevState[4];
-	state_t _state[4];
+	uint32_t _counter[6];
 
-	uint32_t _counter[4];
+	state_t _state[6];
+	state_t _prevState[6];
 
 	uint8_t _pos;
 	uint8_t _prevPos;
@@ -59,8 +56,12 @@ private:
 
 	uint16_t _timeRising;
 	uint16_t _timeFalling;
+	uint16_t _timeTouching;
 
 	uint8_t _filterWeight;
+
+	uint8_t _touch;
+	uint8_t _prevTouch;
 };
 
 #endif

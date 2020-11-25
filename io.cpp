@@ -11,6 +11,9 @@ const uint8_t BTN_LEFT = 39;
 const uint8_t WHEEL_0 = 33;
 const uint8_t WHEEL_1 = 32;
 const uint8_t WHEEL_2 = 27;
+const uint8_t WHEEL_3 = 4;
+const uint8_t WHEEL_4 = 12;
+const uint8_t WHEEL_5 = 13;
 
 void (*_io_cbfnEnter)(void) = NULL;
 void (*_io_cbfnUp)(void) = NULL;
@@ -28,17 +31,16 @@ void (*_io_cbfnWheelCClk)(void) = NULL;
 
 PushButton button[NB_BUTTONS];
 
-TouchWheel wheel = TouchWheel(WHEEL_0, WHEEL_1, WHEEL_2);
+TouchWheel wheel = TouchWheel(WHEEL_0, WHEEL_1, WHEEL_2, WHEEL_3, WHEEL_4, WHEEL_5);
 
 void io_init(){
 	io_initIO();
 	io_initButtons();
 //	__touchInint();
 //	touchSetCycles(uint16_t measure, uint16_t sleep);
-	touchSetCycles(0xF00, 0x1000);
+	touchSetCycles(0x2000, 0x1000);
 
 	wheel.init();
-	wheel.setSteps(32);
 }
 
 void io_initIO(){
@@ -67,14 +69,17 @@ void io_initButtons(){
 void io_update(){
 	io_updateButtons();
 	if(wheel.update()){
+
 		int8_t steps = wheel.getStep();
 		if(steps > 0){
-			_io_cbfnWheelClk();
+			_io_cbWheelClockwise();
 		} else if(steps < 0){
-			_io_cbfnWheelCClk();
+			_io_cbWheelCounterClockwise();
 		}
-	}
 
+//		Serial.printf("position : %i\n", wheel.getPosition());
+//		Serial.printf("step : %i\n", wheel.getStep());
+	}
 }
 
 void io_updateButtons(){

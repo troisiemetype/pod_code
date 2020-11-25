@@ -9,10 +9,14 @@ XMLElement *currentNode;
 
 int32_t *fileID = NULL;
 
+// uint32_t counter = 0;
+
 
 void data_init(){
 	songData = new XMLDocument();
 	if(!SD_MMC.exists("/system/data/songs.xml")){
+		Serial.println("listing files.");
+//		counter = millis();
 		data_listFiles();
 	}
 }
@@ -36,6 +40,8 @@ bool data_listFiles(){
 	fileID = new int32_t(0);
 	data_parseFolder(&music);
 	music.close();
+//	uint32_t time = millis() - counter;
+//	Serial.printf("%i files listed in %i milliseconds.\n", *fileID, time);
 	delete fileID;
 //	tft.println("Saving songs listing");
 	songData->SaveFile("/system/data/songs.xml");
@@ -67,8 +73,8 @@ void data_parseFolder(fs::File *folder, uint8_t lvl){
 /*			tft.fillRect(0, 8, 320, 232, TFT_BLACK);
 			tft.setCursor(0, 8);
 			tft.printf("folder %s \t\tsize : %i\n", file.name(), file.size());
-			data_parseFolder(&file, lvl);
-*/		} else {
+*/			data_parseFolder(&file, lvl);
+		} else {
 /*
 			for(uint8_t i = 0; i < lvl; ++i){
 				tft.print("  ");

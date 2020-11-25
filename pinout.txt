@@ -37,43 +37,43 @@
 
 pin list
 
-0		btn center
+0 *		btn center				IO expander 0		
 1			TX debug output at boot
-2		SD D0
-3			RX program at boot
-4		SD D1
-5		TFT CS
-6			integrated SPI flash
-7			integrated SPI flash
-8			integrated SPI flash
-9			integrated SPI flash
-10			integrated SPI flash
-11			integrated SPI flash
-12		SD D2
-13		SD D3
-14		SD CLK
-15		SD CMD
-16		I2S CLK
-17		TFT reset
-18		TFT SCK
-19		TFT MISO
-20			not exposed
-21		I2S OUT
-22		I2S WS
-23		TFT MOSI
-24			not exposed
-25		TFT dc
-26		TFT led
-27		wheel touch 1
-28			not exposed
-29			not exposed
-30			not exposed
-31			not exposed
-32		wheel touch 2
-33		wheel touch 3
-34		btn up 	(external pullup needed)
-35		btn down 	(external pullup needed)
-36		btn right 			(external pullup needed)
-37			not exposed
-38			not exposed
-39		btn left 		(external pullup needed)
+2 *		SD D0 										SD D0	SD used in 1-bit mode.
+3			RX program at boot						I2S WS (or on GPIO 1)
+4 *		SD D1										T3
+5		TFT CS 										TFT_CS
+6	integrated SPI flash //////////////////////////////////////////////////////////////
+7	integrated SPI flash //////////////////////////////////////////////////////////////
+8	integrated SPI flash //////////////////////////////////////////////////////////////
+9	integrated SPI flash //////////////////////////////////////////////////////////////
+10	integrated SPI flash //////////////////////////////////////////////////////////////
+11	integrated SPI flash //////////////////////////////////////////////////////////////
+12*		SD D2 										T4
+13*		SD D3										T5
+14*		SD CLK										SD CLK
+15*		SD CMD										SD CMD
+16		I2S CLK										I2S CLK
+17		TFT reset - coupled with esp32 EN (RST) 	I2S OUT
+18		TFT SCK										TFT SCK
+19		TFT MISO									TFT MISO
+20	not exposed ///////////////////////////////////////////////////////////////////////
+21		I2S OUT 									SDA
+22		I2S WS	 									SCL
+23		TFT MOSI									TFT MOSI
+24	not exposed ///////////////////////////////////////////////////////////////////////
+25		TFT dc 										TFT DC
+26		TFT led 									TFT led
+27*		wheel touch 1								T0
+28	not exposed ///////////////////////////////////////////////////////////////////////
+29	not exposed ///////////////////////////////////////////////////////////////////////
+30	not exposed ///////////////////////////////////////////////////////////////////////
+31	not exposed ///////////////////////////////////////////////////////////////////////
+32*		wheel touch 2								T1
+33*		wheel touch 3								T2
+34in	btn up 	(ext pullup)	IO expander 2
+35in	btn down (ext pullup)	IO expander 3
+36in	btn right (ext pullup)	IO epxander 4 		Bat check
+37	not exposed ///////////////////////////////////////////////////////////////////////
+38	not exposed ///////////////////////////////////////////////////////////////////////
+39in	btn left (ext pullup) 	IO epxander 5

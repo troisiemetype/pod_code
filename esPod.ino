@@ -36,16 +36,23 @@ void setup(){
 		}
 	}
 */
-
-	if (!SD_MMC.begin("")) {
-//		tft.println("Card Mount Failed");
+	// Check this for 1-bit mode :
+	// sdmmc_slot_config_t slot = SDMMC_SLOT_CONFIG_DEFAULT();
+	// slot.width = 1;
+	// slot_config.width = 1;
+//	sdmmc_host_set_bus_width(SDMMC_HOST_SLOT_1, 1);
+//	sdmmc_slot_config_t slot;
+//	slot.width = 0;
+	if (!SD_MMC.begin("", true)) {
+//	if (!SD_MMC.begin("")) {
+		tft.println("Card Mount Failed");
 		sandbox();
 		return;
 	}
 	uint8_t cardType = SD_MMC.cardType();
 
 	if (cardType == CARD_NONE) {
-//		tft.println("No SD card attached");
+		tft.println("No SD card attached");
 		sandbox();
 		return;
 	}

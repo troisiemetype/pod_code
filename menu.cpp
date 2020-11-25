@@ -268,6 +268,8 @@ void menu_test(){
 }
 
 void menu_testExit(){
+	io_deattachCBUp();
+	io_deattachCBDown();
 	menu_cbList(menu);
 }
 
@@ -287,6 +289,8 @@ void menu_testValueMiddle(){
 }
 
 void menu_cbTest(void *empty){
+	io_deattachCBWheelClockwise();
+	io_deattachCBWheelCounterClockwise();
 	io_attachCBUp(menu_testExit);
 	io_attachCBDown(menu_testValueMiddle);
 	io_attachCBRight(menu_testValuePlus);
