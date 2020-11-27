@@ -10,6 +10,8 @@ public:
 
 	void init();
 
+	void setSteps(uint8_t steps);
+
 	void tuneBaseline(uint8_t cycles = 16);
 	void tuneThreshold(uint8_t cycles = 16);
 

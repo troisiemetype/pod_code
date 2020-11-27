@@ -29,9 +29,17 @@ void TouchWheel::init(){
 
 	_filterWeight = 30;
 
+	_steps = 255;
+
 	tuneBaseline(32);
 	tuneThreshold(32);
 }
+
+void TouchWheel::setSteps(uint8_t steps){
+	if(steps < 12) steps = 12;
+	_steps = steps;
+}
+
 
 void TouchWheel::tuneBaseline(uint8_t cycles){
 	_baseline[0] = 0;
@@ -48,10 +56,11 @@ void TouchWheel::tuneBaseline(uint8_t cycles){
 			uint8_t touch = touchRead(_pin[j]);
 			_baseline[j] += touch;
 //			Serial.printf("%i\t", touch);
-//			_baseline[j] += touchRead(_pin[j]);
+//			_baseline[_channels] += touchRead(_pin[j]);
 		}
 //		Serial.println();
 	}
+//	_baseline[_channels] /= _channels;
 
 //	Serial.printf("baseline :\t");
 	for(uint8_t i = 0; i < _channels; ++i){
@@ -80,7 +89,7 @@ void TouchWheel::tuneThreshold(uint8_t cycles){
 			if(_current[j] < min[j]) min[j] = _current[j];
 //			Serial.printf("%i\t%i\t%i\t\t", _current[j], min[j], max[j]);
 		}
-		Serial.println();
+//		Serial.println();
 	}
 
 	int16_t delta = 0;
@@ -93,8 +102,9 @@ void TouchWheel::tuneThreshold(uint8_t cycles){
 	_thresholdRising = (float)delta * 0.4;
 	_thresholdFalling = (float)delta * 0.4;
 */
-	_thresholdRising = 7;
-	_thresholdFalling = 5;
+	_thresholdRising = 6;
+	_thresholdFalling = 7;
+
 /*
 	Serial.printf("max delta :\t%i\n", delta);
 	Serial.printf("threshold rising:\t%i\n", _thresholdRising);
@@ -116,8 +126,11 @@ int8_t TouchWheel::getStep(){
 
 bool TouchWheel::update(){
 //	Serial.printf("values :\t%i\t%i\t%i\t%i\n", _delta[0], _delta[1], _delta[2], _delta[3]);
-	if(!updateRead()) return false;
+	updateRead();
 //	Serial.printf("channels :\t");
+/*
+//	This part needs tweaking. testing positive channels and updating them almost works
+// 	but still lacks precision.
 	for(uint8_t i = 0; i < _channels; ++i){
 //		Serial.printf("%i\t", (bool)(_touch & (1 << i)));
 	}
@@ -176,6 +189,53 @@ bool TouchWheel::update(){
 	if(_step < -6) _step += 12;
 //	if(_step > 3) _step -= 6;
 //	if(_step < -3) _step += 6;
+*/
+	uint8_t maxDelta = 0;
+	uint8_t maxID = 0;
+	// We start by finding the max touch intensity on every pads.
+//	Serial.printf("deltas :");
+	for(uint8_t i = 0; i < _channels; ++i){
+//		Serial.printf("\t%i", _delta[i]);
+		if(_delta[i] > maxDelta){
+			maxDelta = _delta[i];
+			maxID = i;
+		}
+	}
+
+	if(maxDelta < _thresholdRising) return false;
+
+	int8_t prev = maxID - 1;
+	if(prev < 0) prev += _channels;
+
+	int16_t delta1 =  _delta[prev];
+	int16_t delta2 = _delta[maxID];
+	int16_t delta3 = _delta[(maxID + 1) % _channels];
+
+	float totalDelta = delta1 + delta2 + delta3;
+	float prorata1 = delta1 / totalDelta;
+//	float prorata2 = delta2 / totalDelta;			// not used !!
+	float prorata3 = delta3 / totalDelta;
+
+	float offset = 0;
+	if(delta1 > delta3){
+		offset = -prorata1;
+	} else {
+		offset = prorata3;
+	}
+
+	float position = (float)maxID + offset;
+	if(position < 0) position += _channels;
+
+	_prevPos = _pos;
+//	_pos = (position / _channels) * 256;
+	_pos = ((position / _channels) * 256) / (float)(256 / _steps);
+
+	int8_t steps = _pos - _prevPos;
+
+	_step = steps;
+
+//	Serial.printf("\tposition : %i\n", _pos);
+//	Serial.printf("\tstep : %i\n", _step);
 
 	if(!_prevTouch) return false;
 	return true;
@@ -199,6 +259,7 @@ bool TouchWheel::updateRead(){
 		uint32_t filtered = (uint32_t)_current[i] * _filterWeight + (uint32_t)_previous[i] * (255 - _filterWeight);
 		filtered /= 0xff;
 		_current[i] = filtered;
+//		Serial.printf("%i\t", _current[i]);
 		// compute delta / baseline
 		_delta[i] = _baseline[i] - _current[i];
 		_prevState[i] = _state[i];

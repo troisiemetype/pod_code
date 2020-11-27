@@ -33,14 +33,20 @@ PushButton button[NB_BUTTONS];
 
 TouchWheel wheel = TouchWheel(WHEEL_0, WHEEL_1, WHEEL_2, WHEEL_3, WHEEL_4, WHEEL_5);
 
+uint32_t _timerWheelUpdate = 0;
+const uint16_t WHEEL_UPDATE = 2;
+
 void io_init(){
 	io_initIO();
 	io_initButtons();
 //	__touchInint();
 //	touchSetCycles(uint16_t measure, uint16_t sleep);
-	touchSetCycles(0x2000, 0x1000);
+	// measure is the time spent measuring the capacitance of the pin, in 8MHz cycles
+	// sleep is the time sleeping before starting measure ? "sleep cycles for timer"
+	touchSetCycles(0x1000, 0x1000);
 
 	wheel.init();
+	wheel.setSteps(16);
 }
 
 void io_initIO(){
@@ -68,6 +74,10 @@ void io_initButtons(){
 
 void io_update(){
 	io_updateButtons();
+
+	// temp return for letting touch aside.
+	return;
+
 	if(wheel.update()){
 
 		int8_t steps = wheel.getStep();

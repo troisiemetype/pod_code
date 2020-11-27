@@ -289,8 +289,8 @@ void menu_testValueMiddle(){
 }
 
 void menu_cbTest(void *empty){
-	io_deattachCBWheelClockwise();
-	io_deattachCBWheelCounterClockwise();
+//	io_deattachCBWheelClockwise();
+//	io_deattachCBWheelCounterClockwise();
 	io_attachCBUp(menu_testExit);
 	io_attachCBDown(menu_testValueMiddle);
 	io_attachCBRight(menu_testValuePlus);
@@ -301,10 +301,10 @@ void menu_cbTest(void *empty){
 
 // The callback function to be attached to MenuList objects, when selecting them.
 void menu_cbList(void* list){
-	io_attachCBWheelClockwise(menu_next);
-	io_attachCBWheelCounterClockwise(menu_prev);
-//	io_attachCBUp(menu_prev);
-//	io_attachCBDown(menu_next);
+//	io_attachCBWheelClockwise(menu_next);
+//	io_attachCBWheelCounterClockwise(menu_prev);
+	io_attachCBUp(menu_prev);
+	io_attachCBDown(menu_next);
 	io_attachCBRight(menu_enter);
 	io_attachCBLeft(menu_exit);
 
