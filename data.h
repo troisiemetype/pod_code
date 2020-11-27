@@ -7,13 +7,11 @@
 
 void data_init();
 
-bool data_listFiles();
-void data_parseFolder(fs::File *file, uint8_t lvl = 0);
-
-bool data_checkExistingFiles();
 bool data_checkNewFiles();
+bool data_checkDeletedFiles();
 
-void data_addSong(fs::File *file);
+void data_parseFolder(fs::File *file, uint8_t lvl = 0);
+void data_checkSong(fs::File *file);
 
 tinyxml2::XMLElement* data_getSongList();
 
