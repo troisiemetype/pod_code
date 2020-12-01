@@ -1,10 +1,10 @@
 #ifndef ESPOD_IO_H
 #define ESPOD_IO_H
 
-#include <Arduino.h>
+// #include <Arduino.h>
 #include "esPod.h"
-#include "PushButton.h"
-#include "wheel.h"
+// #include "PushButton.h"
+// #include "wheel.h"
 
 void io_init();
 void io_initIO();
@@ -16,6 +16,8 @@ void io_update();
 
 void io_updateButtons();
 void io_updateWheel();
+
+void io_deattachAllCB();
 
 void io_attachCBEnter(void (*fn)());
 void io_attachCBUp(void (*fn)());

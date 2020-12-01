@@ -1,4 +1,5 @@
-#include "io.h"
+// #include "io.h"
+#include "esPod.h"
 
 const uint8_t NB_BUTTONS = 5;
 
@@ -140,6 +141,21 @@ void io_updateButtons(){
 
 void io_updateWheel(){
 
+}
+
+void io_deattachAllCB(){
+	io_deattachCBEnter();
+	io_deattachCBUp();
+	io_deattachCBDown();
+	io_deattachCBRight();
+	io_deattachCBLeft();
+	io_deattachCBEnterLong();
+	io_deattachCBUpLong();
+	io_deattachCBDownLong();
+	io_deattachCBRightLong();
+	io_deattachCBLeftLong();
+	io_deattachCBWheelClockwise();
+	io_deattachCBWheelCounterClockwise();
 }
 
 void io_attachCBEnter(void (*fn)())			{_io_cbfnEnter = fn;}

@@ -1,5 +1,5 @@
-// #include "esPod.h"
-#include "menu.h"
+#include "esPod.h"
+// #include "menu.h"
 
 using namespace tinyxml2;
 
@@ -8,6 +8,14 @@ MenuList *menu;
 uint8_t maxMenuItem;
 
 float testValue = 0.5;
+
+// dynamic : 19044 bytess (5%)
+// 100 songs : 21044 bytes (6%)
+// 1000 songs : 39044 bytes (11%)
+// 5000 songs : 119044 bytes (36%)
+// 7000 songs : compilation error
+// 100 empty MenuItem = 2000 bytes
+// 100 empty MenuSong = 4000 bytes
 
 // Create main menu, call subroutines to parse levels.
 bool menu_init(){
@@ -122,7 +130,7 @@ bool menu_createMusicSongs(MenuList *list, XMLElement *currentNode){
 		song->setTrack(menu_getXMLNumberField(currentNode, "track"));
 		song->setSet(menu_getXMLNumberField(currentNode, "set"));
 		song->setYear(menu_getXMLNumberField(currentNode, "year"));
-		song->attachCallback(menu_cbSong, NULL);
+		song->attachCallback(menu_cbSong, song);
 		list->addChild(song);
 
 		currentNode = currentNode->NextSiblingElement();
@@ -238,6 +246,10 @@ void menu_write(MenuList *list){
 	display_updateMenu();
 }
 
+void menu_update(){
+	menu_cbList(menu);
+}
+
 // Enter selected menu item.
 // MenuItem::exec() is virtual, and will call the appropriate callback for each derivate of the class.
 void menu_enter(){
@@ -304,6 +316,7 @@ void menu_cbTest(void *empty){
 
 // The callback function to be attached to MenuList objects, when selecting them.
 void menu_cbList(void* list){
+	io_deattachAllCB();
 //	io_attachCBWheelClockwise(menu_next);
 //	io_attachCBWheelCounterClockwise(menu_prev);
 	io_attachCBUp(menu_prev);
@@ -318,6 +331,7 @@ void menu_cbList(void* list){
 // The callback function to be attached to MenuItem objects, when selecting them.
 void menu_cbSong(void *data){
 //	tft.print("song called");
+	audio_playTrack((MenuSong*)data);
 }
 
 const char* menu_getXMLTextField(XMLElement *node, const char *field){
@@ -413,6 +427,8 @@ uint8_t MenuSong::getPop(){
 	return _rank;
 }
 
+/*
 void MenuSong::exec(){
 
 }
+*/

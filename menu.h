@@ -1,11 +1,11 @@
 #ifndef ESPOD_MENU_H
 #define ESPOD_MENU_H
 
-#include <Arduino.h>
-#include <FS.h>
+// #include <Arduino.h>
+// #include <FS.h>
 #include "esPod.h"
 
-#include "Menu.h"
+// #include "Menu.h"
 
 bool menu_init();
 bool menu_createMusicSongs(MenuList *list, tinyxml2::XMLElement *currentNode);
@@ -20,6 +20,7 @@ int16_t menu_sortBySet(MenuItem *a, MenuItem *b);
 int16_t menu_sortRank(MenuItem *a, MenuItem *b);
 
 void menu_write(MenuList *list);
+void menu_update();
 void menu_enter();
 void menu_exit();
 void menu_next();
@@ -67,7 +68,7 @@ public:
 	void setPop(uint8_t rank);
 	uint8_t getPop();
 
-	virtual void exec();
+//	virtual void exec();
 
 private:
 	char *_filename;

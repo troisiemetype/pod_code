@@ -1,8 +1,8 @@
 #ifndef ESPOD_DISPLAY_H
 #define ESPOD_DISPLAY_H
 
-#include <Arduino.h>
-#include <TFT_eSPI.h>
+// #include <Arduino.h>
+// #include <TFT_eSPI.h>
 #include "esPod.h"
 
 // line height == 

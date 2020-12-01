@@ -1,4 +1,5 @@
-#include "wheel.h"
+// #include "wheel.h"
+#include "esPod.h"
 
 TouchWheel::TouchWheel(uint8_t pin0, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, uint8_t pin5){
 	_pin[0] = pin0;

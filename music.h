@@ -1,7 +1,7 @@
 #ifndef ESPOD_MUSIC_H
 #define ESPOD_MUSIC_H
 
-#include <Arduino.h>
+// #include <Arduino.h>
 #include "esPod.h"
 
 struct album_t{

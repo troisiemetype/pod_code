@@ -1,8 +1,8 @@
 #ifndef ESPOD_DATA_H
 #define ESPOD_DATA_H
 
-#include <Arduino.h>
-#include <FS.h>
+// #include <Arduino.h>
+// #include <FS.h>
 #include "esPod.h"
 
 void data_init();

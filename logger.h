@@ -1,7 +1,7 @@
 #ifndef ESPOD_LOGGER_H
 #define ESPOD_LOGGER_H
 
-#include <Arduino.h>
+// #include <Arduino.h>
 #include "esPod.h"
 
 class Logger : public Print {
