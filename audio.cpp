@@ -10,12 +10,23 @@ const uint8_t I2S_CLK = 16;
 const uint8_t I2S_DATA = 21;
 const uint8_t I2S_WS = 22;
 
+MenuSong *current = NULL;
+
+bool playing = false;
+
 void audio_init(){
 	audioOutput = new AudioOutputI2S();
 	audioOutput->SetPinout(I2S_CLK, I2S_WS, I2S_DATA);
 	audioFile = new AudioFileSourceFS(SD_MMC);
 	audioTags = new AudioFileSourceID3(audioFile);
-//	player = new AudioGeneratorMP3();
+}
+
+void audio_update(){
+	if(!playing) return;
+
+	player->loop();
+
+
 }
 
 void audio_playTrack(MenuSong *track){
@@ -25,9 +36,22 @@ void audio_playTrack(MenuSong *track){
 	io_attachCBLeft(audio_prevTrack);
 	io_attachCBDown(audio_pause);
 	io_attachCBUp(menu_update);
-	// Display track infos
-	display_makePlayer(track->getArtist(), track->getAlbum(), track->getName(), track->getTrack());
+	// set track infos
+	if(current != track){
+		current = track;
 
+		audioFile->close();
+		audioFile->open(current->getFilename());
+
+		delete player;
+		player = new AudioGeneratorMP3();
+		player->begin(audioFile, audioOutput);
+		playing = true;
+	}
+
+	// Display track infos
+	display_makePlayer(current->getArtist(), current->getAlbum(), current->getName(), current->getTrack());
+	display_playerProgress(0, 134);
 	// Play track
 	// Update time every seconds
 	// 
@@ -43,7 +67,15 @@ void audio_prevTrack(){
 }
 
 void audio_pause(){
-
+	if(playing){
+		playing = false;
+//		audioOutput->SetGain(0);
+		audioOutput->stop();
+	} else {
+		playing = true;
+//		audioOutput->SetGain(1);
+		audioOutput->begin();
+	}
 }
 
 

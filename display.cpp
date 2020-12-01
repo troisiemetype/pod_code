@@ -145,7 +145,7 @@ void display_makePlayer(const char *artist, const char *album, const char *song,
 	entrySprite.setTextPadding(0);
 	entrySprite.setTextColor(COLOR_TXT, COLOR_BG);
 	entrySprite.setTextDatum(ML_DATUM);
-	entrySprite.drawString(artist, 1, 11);
+	entrySprite.drawString(song, 1, 11);
 	entrySprite.pushSprite(0, 44);
 
 	entrySprite.loadFont(NotoSans16);
@@ -162,7 +162,7 @@ void display_makePlayer(const char *artist, const char *album, const char *song,
 	entrySprite.setTextPadding(0);
 	entrySprite.setTextColor(COLOR_TXT, COLOR_BG);
 	entrySprite.setTextDatum(ML_DATUM);
-	entrySprite.drawString(song, 1, 11);
+	entrySprite.drawString(artist, 1, 11);
 	entrySprite.pushSprite(0, 88);
 
 	entrySprite.loadFont(NotoSans16);
