@@ -11,6 +11,7 @@ bool data_checkNewFiles();
 bool data_checkDeletedFiles();
 
 void data_parseFolder(fs::File *file, uint8_t lvl = 0);
+bool data_checkDir(fs::File *dir);
 void data_checkSong(fs::File *file);
 
 tinyxml2::XMLElement* data_getSongList();

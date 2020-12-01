@@ -38,11 +38,11 @@
 pin list
 
 0 *		btn center				IO expander 0		
-1			TX debug output at boot
+1			TX debug output at boot					USB
 2 *		SD D0 										SD D0	SD used in 1-bit mode.
-3			RX program at boot						I2S WS (or on GPIO 1)
+3			RX program at boot						USB
 4 *		SD D1										T3
-5		TFT CS 										TFT_CS
+5		TFT CS // Just needs to be GND tied !		I2S WS
 6	integrated SPI flash //////////////////////////////////////////////////////////////
 7	integrated SPI flash //////////////////////////////////////////////////////////////
 8	integrated SPI flash //////////////////////////////////////////////////////////////

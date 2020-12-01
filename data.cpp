@@ -2,12 +2,15 @@
 
 extern 	AudioGenerator *player;
 
-const char* database = "/system/data/songs.xml";
+const char* songDatabase = "/system/data/songs.xml";
+const char* dirDatabase = "/system/data/dir.xml";
 
 using namespace tinyxml2;
 
 XMLDocument *songData = NULL;
+XMLDocument *dirData = NULL;
 XMLElement *currentNode = NULL;
+XMLElement *dirNode = NULL;
 
 uint32_t fileID = 0;
 
@@ -18,40 +21,62 @@ uint32_t totalSize = 0;
 void data_init(){
 	songData = new XMLDocument();
 	if(!SD_MMC.exists("/music")) SD_MMC.mkdir("/music");
+
+	if(songData->LoadFile(songDatabase)){
+		currentNode = songData->NewElement("songs");
+		currentNode = (XMLElement*)songData->InsertFirstChild(currentNode);
+	}
+
+	dirData = new XMLDocument();
+	if(dirData->LoadFile(dirDatabase)){
+		dirNode = dirData->NewElement("directories");
+		dirNode = (XMLElement*)dirData->InsertFirstChild(dirNode);
+	}
+
 //	Serial.println("listing files.");
 	data_checkNewFiles();
-	data_checkDeletedFiles();
+//	data_checkDeletedFiles();
 //	data_checkNewFiles();
+
+//	delete songData;
 }
 
 // List file from SD card, then save them to a raw XML containing metadata.
 // This file will serve as a data base.
 bool data_checkNewFiles(){
-//	XMLError loaded = songData->LoadFile(database);
-	if(songData->LoadFile(database)){
-		currentNode = songData->NewElement("songs");
-		currentNode = (XMLElement*)songData->InsertFirstChild(currentNode);
-	} else {
-		currentNode = songData->RootElement();
-	}
+	currentNode = songData->RootElement();
+	dirNode = dirData->RootElement();
 
 //	Serial.println("Listing songs");
 	fileID = 0;
 	fs::File music = SD_MMC.open("/music");
+	// modified :
+	// 1606519370
+	// 1606519370
+	// After adding some data : 
+	// 1606567148
+	// After suppressing a file in a sub folder
+	// 1606567148
+//	uint32_t size = SD_MMC.totalBytes() / (1024 * 1024);
+//	Serial.printf("available : %i\n", size);
+//	Serial.printf("music modified on : %i\n", (int32_t)music.getLastWrite());
 	counter = millis();
+	if(data_checkDir(&music)){
+
+	}
 	data_parseFolder(&music);
 	music.close();
 //	uint32_t time = millis() - counter;
 //	Serial.printf("%i files listed in %i milliseconds.\n", fileID, time);
 
 //	tft.println("Saving songs listing");
-	songData->SaveFile(database);
+	songData->SaveFile(songDatabase);
+	dirData->SaveFile(dirDatabase);
 
 	return 0;
 }
 
 bool data_checkDeletedFiles(){
-	songData->LoadFile(database);
 	currentNode = songData->RootElement()->FirstChildElement();
 	fileID = 0;
 
@@ -60,6 +85,7 @@ bool data_checkDeletedFiles(){
 //	Serial.printf("\nchecking for removed songs\n");
 	counter = millis();
 	for (;;){
+		if(currentNode == NULL) break;
 		const char *name = currentNode->FirstChildElement("filename")->GetText();
 //		const char *name = menu_getXMLTextField(currentNode, "name");
 		// Check if file exists
@@ -71,7 +97,7 @@ bool data_checkDeletedFiles(){
 			fileID++;
 //			file.close();
 		} else {
-			// remove this file from the database.
+			// remove this file from the songDatabase.
 			nodeToClear = currentNode;
 //			Serial.printf("removed\t%s\n", name);
 		}
@@ -80,11 +106,10 @@ bool data_checkDeletedFiles(){
 			nodeToClear->Parent()->DeleteChild(nodeToClear);
 			nodeToClear = NULL;
 		}
-		if(currentNode == NULL) break;
 	}
 //	uint32_t time = millis() - counter;
 //	Serial.printf("%i files listed in %i milliseconds.\n", fileID, time);
-	songData->SaveFile(database);
+	songData->SaveFile(songDatabase);
 	return 1;
 }
 
@@ -103,6 +128,34 @@ void data_parseFolder(fs::File *folder, uint8_t lvl){
 			data_checkSong(&file);
 		}
 	}
+}
+
+bool data_checkDir(fs::File *dir)
+{
+	dirNode = dirData->RootElement()->FirstChildElement();
+	for(;;){
+		if(!dirNode){
+			Serial.println("no dir data");
+			break;
+		}
+		if(strcmp(dir->name(), dirNode->FirstChildElement()->GetText()) == 0){
+			int32_t value = 0;
+			dirNode->FirstChildElement("time")->QueryIntText(&value);
+			if(dir->getLastWrite() == value){
+				Serial.println("directory found.");
+				return 0;
+			}
+		}
+		dirNode = dirNode->NextSiblingElement();
+	}
+
+	dirNode = dirData->RootElement();
+	dirNode = dirNode->InsertNewChildElement("dir");
+	dirNode->InsertNewChildElement("name")->SetText(dir->name());
+	dirNode->InsertNewChildElement("time")->SetText((int32_t)(dir->getLastWrite()));
+
+	Serial.println("directory created.");
+	return 1;
 }
 
 void data_checkSong(fs::File *file){
@@ -146,7 +199,7 @@ void data_checkSong(fs::File *file){
 
 
 XMLElement* data_getSongList(){
-	if(songData->LoadFile(database)){
+	if(songData->LoadFile(songDatabase)){
 		return NULL;
 	}
 	return songData->RootElement()->FirstChildElement();

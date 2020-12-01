@@ -1,3 +1,4 @@
+// #include "esPod.h"
 #include "menu.h"
 
 using namespace tinyxml2;
@@ -264,7 +265,9 @@ void menu_prev(){
 }
 
 void menu_test(){
-	display_vuMeter(testValue, 40, 190, 240);
+//	display_vuMeter(testValue, 40, 190, 240);
+	display_makePlayer("Toto", "le meilleur de", "prout prout tralala", 1);
+	display_playerProgress(25, 195);
 }
 
 void menu_testExit(){

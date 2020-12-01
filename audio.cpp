@@ -5,10 +5,19 @@ extern AudioFileSourceFS *audioFile;
 extern AudioGenerator *player;
 extern AudioOutputI2S *audioOutput;
 
+void audio_playTrack(const char *track){
+	// Attach buttons callbacks
+	// Display track infos
+	// Play track
+	// Update time every seconds
+	// 
+	MenuSong song;
+}
+
 bool audio_getTag(fs::File* file){
 	String name = file->name();
 	if(!(name.endsWith(".mp3"))){
-	audioLogger->println("unsuported file");
+	audioLogger->println("unsupported file");
 		return 1;
 	}
 	audioFile->open(file->name());

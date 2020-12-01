@@ -134,9 +134,84 @@ void display_updateMenu(){
 	}
 }
 
-void display_makePlayer(){
+void display_makePlayer(const char *artist, const char *album, const char *song, uint8_t track){
+	display_clearAll();
+	display_makeHeader("playing");
+
+	entrySprite.loadFont(NotoSansBold16);
+	entrySprite.createSprite(320, 22);
+	entrySprite.fillSprite(COLOR_BG);
+	entrySprite.setTextPadding(0);
+	entrySprite.setTextColor(COLOR_TXT, COLOR_BG);
+	entrySprite.setTextDatum(ML_DATUM);
+	entrySprite.drawString(artist, 1, 11);
+	entrySprite.pushSprite(0, 44);
+
+	entrySprite.loadFont(NotoSans16);
+	entrySprite.createSprite(320, 22);
+	entrySprite.fillSprite(COLOR_BG);
+	entrySprite.setTextPadding(0);
+	entrySprite.setTextColor(COLOR_TXT, COLOR_BG);
+	entrySprite.setTextDatum(ML_DATUM);
+	entrySprite.drawString(album, 1, 11);
+	entrySprite.pushSprite(0, 66);
+
+	entrySprite.createSprite(320, 22);
+	entrySprite.fillSprite(COLOR_BG);
+	entrySprite.setTextPadding(0);
+	entrySprite.setTextColor(COLOR_TXT, COLOR_BG);
+	entrySprite.setTextDatum(ML_DATUM);
+	entrySprite.drawString(song, 1, 11);
+	entrySprite.pushSprite(0, 88);
+
+	entrySprite.loadFont(NotoSans16);
+	entrySprite.createSprite(320, 22);
+	entrySprite.fillSprite(COLOR_BG);
+	entrySprite.setTextPadding(0);
+	entrySprite.setTextColor(COLOR_TXT, COLOR_BG);
+	entrySprite.setTextDatum(ML_DATUM);
+	// Check how to display values.
+	entrySprite.drawNumber(track, 1, 11);
+	entrySprite.pushSprite(0, 110);
+
+	entrySprite.unloadFont();
+	entrySprite.deleteSprite();
 
 }
+
+void display_playerProgress(uint16_t current, uint16_t total){
+	uint8_t minutes = current / 60;
+	uint8_t seconds = current % 60;
+	uint8_t rMinutes = (total - current) / 60;
+	uint8_t rSeconds = (total - current) % 60;
+
+	String time = String(minutes) + String(':') + String(seconds / 10) + String(seconds % 10);
+
+	entrySprite.loadFont(NotoSans15);
+	entrySprite.createSprite(50, 22);
+	entrySprite.fillSprite(COLOR_BG);
+	entrySprite.setTextPadding(0);
+	entrySprite.setTextColor(COLOR_TXT, COLOR_BG);
+	entrySprite.setTextDatum(MR_DATUM);
+	entrySprite.drawString(time, 37, 11);
+	entrySprite.pushSprite(0, 200);
+
+	display_vuMeter(((float)current / total), 50, 201, 220);
+
+	time = String('-') + String(rMinutes) + String(':') + String(rSeconds / 10) + String(rSeconds % 10);
+
+	entrySprite.fillSprite(COLOR_BG);
+	entrySprite.setTextPadding(0);
+	entrySprite.setTextColor(COLOR_TXT, COLOR_BG);
+	entrySprite.setTextDatum(ML_DATUM);
+	entrySprite.drawString(time, 3, 11);
+	entrySprite.pushSprite(280, 200);
+
+	entrySprite.unloadFont();
+	entrySprite.deleteSprite();
+}
+
+
 
 void display_vuMeter(float value, uint16_t x, uint16_t y, uint16_t width = 200){
 	if(value < 0) value = 0;

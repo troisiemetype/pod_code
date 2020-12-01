@@ -43,6 +43,9 @@ void display_pushToMenu(const char *name, bool active = false);
 void display_makeMenu(const char *name);
 void display_updateMenu();
 
+void display_makePlayer(const char *artist, const char *album, const char *song, uint8_t track);
+void display_playerProgress(uint16_t current, uint16_t total);
+
 void display_makePlayer();
 
 void display_vuMeter(float value, uint16_t x, uint16_t y, uint16_t width);
