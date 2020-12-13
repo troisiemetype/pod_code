@@ -37,6 +37,8 @@ TouchWheel wheel = TouchWheel(WHEEL_0, WHEEL_1, WHEEL_2, WHEEL_3, WHEEL_4, WHEEL
 uint32_t _timerWheelUpdate = 0;
 const uint16_t WHEEL_UPDATE = 2;
 
+uint32_t cnt = 0;
+
 void io_init(){
 	io_initIO();
 	io_initButtons();
@@ -74,7 +76,9 @@ void io_initButtons(){
 }
 
 void io_update(){
+//	cnt = millis();
 	io_updateButtons();
+//	log_d("buttons update : %i", (millis() - cnt));
 
 	// temp return for letting touch aside.
 	return;
@@ -93,6 +97,8 @@ void io_update(){
 	}
 }
 
+// On a button push, this function is 28ms long !! These are 1234 samples at 44100Hz !
+// TODO : need to find a way to either buffer data, or speedup buttons !
 void io_updateButtons(){
 	for(uint8_t i = 0; i < NB_BUTTONS; ++i){
 //		state |= (button[i].update() << i);

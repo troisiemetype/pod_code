@@ -16,6 +16,7 @@ float testValue = 0.5;
 // 7000 songs : compilation error
 // 100 empty MenuItem = 2000 bytes
 // 100 empty MenuSong = 4000 bytes
+// MenuSong *songs = (MenuSong*)ps_malloc(100);
 
 // Create main menu, call subroutines to parse levels.
 bool menu_init(){
@@ -229,7 +230,7 @@ int16_t menu_sortRank(MenuItem *a, MenuItem *b){
 }
 
 // Display the current menu on screen.
-// TODO : see if using a sprite could avoid flickering.
+// TODO : make the menu update line after line, to avoid audio buffer underrun.
 void menu_write(MenuList *list){
 //	Serial.printf("making menu %s\n", list->getName());
 //	display_makeMenuBG();

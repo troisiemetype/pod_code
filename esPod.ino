@@ -12,6 +12,11 @@ void setup(){
 
 	Serial.begin(115200);
 
+	log_d("Total heap: %d", ESP.getHeapSize());
+	log_d("Free heap: %d", ESP.getFreeHeap());
+	log_d("Total PSRAM: %d", ESP.getPsramSize());
+	log_d("Free PSRAM: %d", ESP.getFreePsram());
+
 	io_init();
 	display_init();
 
@@ -29,11 +34,22 @@ void setup(){
 		return;
 	}
 
+	log_d("Total heap: %d", ESP.getHeapSize());
+	log_d("Free heap: %d", ESP.getFreeHeap());
 	audio_init();
 	data_init();
+//	log_d("data init");
 	if(menu_init()){
 		sandbox();
 	}
+	log_d("Total heap: %d", ESP.getHeapSize());
+	log_d("Free heap: %d", ESP.getFreeHeap());
+
+	data_empty();
+
+	log_d("Total heap: %d", ESP.getHeapSize());
+	log_d("Free heap: %d", ESP.getFreeHeap());
+
 }
 
 void loop(){

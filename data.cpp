@@ -20,9 +20,9 @@ uint32_t totalSize = 0;
 
 
 void data_init(){
-	songData = new XMLDocument();
 	if(!SD_MMC.exists("/music")) SD_MMC.mkdir("/music");
 
+	songData = new XMLDocument();
 	if(songData->LoadFile(songDatabase)){
 		currentNode = songData->NewElement("songs");
 		currentNode = (XMLElement*)songData->InsertFirstChild(currentNode);
@@ -40,6 +40,13 @@ void data_init(){
 //	data_checkNewFiles();
 
 //	delete songData;
+}
+
+void data_empty(){
+	currentNode = NULL;
+	dirNode = NULL;
+	delete songData;
+	delete dirData;
 }
 
 // List file from SD card, then save them to a raw XML containing metadata.
@@ -131,8 +138,8 @@ void data_parseFolder(fs::File *folder, uint8_t lvl){
 	}
 }
 
-bool data_checkDir(fs::File *dir)
-{
+bool data_checkDir(fs::File *dir){
+	const char *name = dir->name();
 	dirNode = dirData->RootElement()->FirstChildElement();
 	for(;;){
 		if(!dirNode){
@@ -143,7 +150,7 @@ bool data_checkDir(fs::File *dir)
 			int32_t value = 0;
 			dirNode->FirstChildElement("time")->QueryIntText(&value);
 			if(dir->getLastWrite() == value){
-				Serial.println("directory found.");
+				Serial.printf("%s found.\n", name);
 				return 0;
 			}
 		}
@@ -155,7 +162,7 @@ bool data_checkDir(fs::File *dir)
 	dirNode->InsertNewChildElement("name")->SetText(dir->name());
 	dirNode->InsertNewChildElement("time")->SetText((int32_t)(dir->getLastWrite()));
 
-	Serial.println("directory created.");
+	Serial.printf("%s created.\n", name);
 	return 1;
 }
 
@@ -167,7 +174,7 @@ void data_checkSong(fs::File *file){
 	for(;;){
 		if(!currentNode) break;
 		if(strcmp(currentNode->FirstChildElement("filename")->GetText(), name) == 0){
-//			Serial.printf("checked\t%s\n", name);
+			Serial.printf("checked\t%s\n", name);
 			fileID++;
 			return;
 		}
@@ -175,6 +182,7 @@ void data_checkSong(fs::File *file){
 	}
 
 	currentNode = songData->RootElement();
+	log_d("getting tag");
 	if(!audio_getTag(file)){
 		totalSize += file->size();
 		currentNode = currentNode->InsertNewChildElement("song");
@@ -193,7 +201,7 @@ void data_checkSong(fs::File *file){
 		while(player->isRunning()){
 			player->loop();
 		}
-//		Serial.printf("added\t%s\n", name);
+		Serial.printf("added\t%s\n", name);
 	}
 
 }

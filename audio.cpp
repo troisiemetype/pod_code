@@ -19,6 +19,7 @@ void audio_init(){
 	audioOutput->SetPinout(I2S_CLK, I2S_WS, I2S_DATA);
 	audioFile = new AudioFileSourceFS(SD_MMC);
 	audioTags = new AudioFileSourceID3(audioFile);
+	player = new AudioGeneratorMP3();
 }
 
 void audio_update(){
@@ -42,9 +43,9 @@ void audio_playTrack(MenuSong *track){
 
 		audioFile->close();
 		audioFile->open(current->getFilename());
-
-		delete player;
-		player = new AudioGeneratorMP3();
+		// todo : stopping and changing file make the player reboot.
+//		player->stop();
+//		player = new AudioGeneratorMP3();
 		player->begin(audioFile, audioOutput);
 		playing = true;
 	}

@@ -6,6 +6,7 @@
 #include "esPod.h"
 
 void data_init();
+void data_empty();
 
 bool data_checkNewFiles();
 bool data_checkDeletedFiles();

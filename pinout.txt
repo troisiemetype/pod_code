@@ -37,12 +37,12 @@
 
 pin list
 
-0 *		btn center				IO expander 0		
+0 *		btn center				IO expander 0		SPDIF out
 1			TX debug output at boot					USB
 2 *		SD D0 										SD D0	SD used in 1-bit mode.
 3			RX program at boot						USB
 4 *		SD D1										T3
-5		TFT CS // Just needs to be GND tied !		I2S WS
+5		TFT CS // Just needs to be GND tied !		I2S CLK
 6	integrated SPI flash //////////////////////////////////////////////////////////////
 7	integrated SPI flash //////////////////////////////////////////////////////////////
 8	integrated SPI flash //////////////////////////////////////////////////////////////
@@ -53,7 +53,7 @@ pin list
 13*		SD D3										T5
 14*		SD CLK										SD CLK
 15*		SD CMD										SD CMD
-16		I2S CLK										I2S CLK
+16		I2S CLK										I2S WS
 17		TFT reset - coupled with esp32 EN (RST) 	I2S OUT
 18		TFT SCK										TFT SCK
 19		TFT MISO									TFT MISO
@@ -71,9 +71,9 @@ pin list
 31	not exposed ///////////////////////////////////////////////////////////////////////
 32*		wheel touch 2								T1
 33*		wheel touch 3								T2
-34in	btn up 	(ext pullup)	IO expander 2
-35in	btn down (ext pullup)	IO expander 3
-36in	btn right (ext pullup)	IO epxander 4 		Bat check
+34in	btn up 	(ext pullup)	IO expander 2		Bat check
+35in	btn down (ext pullup)	IO expander 3 		Hold button
+36in	btn right (ext pullup)	IO epxander 4 		Bat stat
 37	not exposed ///////////////////////////////////////////////////////////////////////
 38	not exposed ///////////////////////////////////////////////////////////////////////
 39in	btn left (ext pullup) 	IO epxander 5
