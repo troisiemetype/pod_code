@@ -55,4 +55,5 @@ void setup(){
 void loop(){
 	audio_update();
 	io_update();
+	display_update();
 }

@@ -16,6 +16,9 @@ const uint8_t WHEEL_3 = 4;
 const uint8_t WHEEL_4 = 12;
 const uint8_t WHEEL_5 = 13;
 
+const uint8_t BATTERY_LEVEL = 34;
+const uint8_t BATTERY_STAT = 36; // SenVP
+
 void (*_io_cbfnEnter)(void) = NULL;
 void (*_io_cbfnUp)(void) = NULL;
 void (*_io_cbfnDown)(void) = NULL;
@@ -38,6 +41,9 @@ uint32_t _timerWheelUpdate = 0;
 const uint16_t WHEEL_UPDATE = 2;
 
 uint32_t cnt = 0;
+
+uint16_t batLevel = 0;
+bool batStat = 0;
 
 void io_init(){
 	io_initIO();
@@ -80,6 +86,7 @@ void io_update(){
 	io_updateButtons();
 //	log_d("buttons update : %i", (millis() - cnt));
 
+	io_updateBattery();
 	// temp return for letting touch aside.
 	return;
 
@@ -147,6 +154,16 @@ void io_updateButtons(){
 
 void io_updateWheel(){
 
+}
+
+void io_updateBattery(){
+//	batStat = digitalRead(BATTERY_STAT);
+//	batLevel = analogRead(BATTERY_LEVEL);
+	if((millis() - cnt) > 2){
+		cnt = millis();
+		if(++batLevel > 4095) batLevel = 0;
+		display_battery((float)batLevel / 4095);
+	}
 }
 
 void io_deattachAllCB(){

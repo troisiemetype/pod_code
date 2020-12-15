@@ -14,20 +14,29 @@ MenuSong *current = NULL;
 
 bool playing = false;
 
+hw_timer_t *audioTimer = NULL;
+// portMUX_TYPE audioTimerMux= portMUX_INITIALIZER_UNLOCKED;
+
 void audio_init(){
 	audioOutput = new AudioOutputI2S();
 	audioOutput->SetPinout(I2S_CLK, I2S_WS, I2S_DATA);
 	audioFile = new AudioFileSourceFS(SD_MMC);
 	audioTags = new AudioFileSourceID3(audioFile);
 	player = new AudioGeneratorMP3();
+/*
+	audioTimer = timerBegin(0, 0, true);
+	timerAttachInterrupt(audioTimer, &audio_update, true);
+	timerAlarmWrite(audioTimer, 1800, true);
+	timerAlarmEnable(audioTimer);
+*/
 }
 
-void audio_update(){
+void /*IRAM_ATTR*/ audio_update(){
+//	portENTER_CRITICAL_ISR(&audioTimerMux);
 	if(!playing) return;
 
 	player->loop();
-
-
+//	portEXIT_CRITICAL_ISR(&audioTimerMux);
 }
 
 void audio_playTrack(MenuSong *track){
@@ -46,7 +55,8 @@ void audio_playTrack(MenuSong *track){
 		// todo : stopping and changing file make the player reboot.
 //		player->stop();
 //		player = new AudioGeneratorMP3();
-		player->begin(audioFile, audioOutput);
+		*audioTags = AudioFileSourceID3(audioFile, true);
+		player->begin(audioTags, audioOutput);
 		playing = true;
 	}
 

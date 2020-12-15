@@ -38,10 +38,13 @@ void display_setRunningMode();
 void display_clearDisplay();
 void display_clearAll();
 
-void display_makeHeader(const char *header);
-void display_pushToMenu(const char *name, bool active = false);
-void display_makeMenu(const char *name);
 void display_updateMenu();
+
+void display_makeHeader(const char *header);
+void display_pushToMenu(const char *name, bool active, uint8_t index);
+void display_makeMenuEntry(const char *name, bool active);
+void display_makeMenu(const char *name);
+void display_fillMenu();
 
 void display_makePlayer(const char *artist, const char *album, const char *song, uint8_t track);
 void display_playerProgress(uint16_t current, uint16_t total);
@@ -49,5 +52,6 @@ void display_playerProgress(uint16_t current, uint16_t total);
 void display_makePlayer();
 
 void display_vuMeter(float value, uint16_t x, uint16_t y, uint16_t width);
+void display_battery(float value);
 
 #endif

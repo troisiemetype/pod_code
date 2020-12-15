@@ -17,6 +17,8 @@ void io_update();
 void io_updateButtons();
 void io_updateWheel();
 
+void io_updateBattery();
+
 void io_deattachAllCB();
 
 void io_attachCBEnter(void (*fn)());

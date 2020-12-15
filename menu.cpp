@@ -240,11 +240,11 @@ void menu_write(MenuList *list){
 //	Serial.printf("focus @ %i\n", (int32_t)list->getFocus());
 	for(uint8_t i = 0; i < maxMenuItem; ++i){
 //		Serial.printf("item @ %i, named %s, focus : %i\n", (int32_t)item, item->getName(), item->hasFocus());
-		display_pushToMenu(item->getName(), item->hasFocus());
+		display_pushToMenu(item->getName(), item->hasFocus(), i);
 		item = list->getNext();
 		if(item == NULL) break;
 	}
-	display_updateMenu();
+//	display_fillMenu();
 }
 
 void menu_update(){
