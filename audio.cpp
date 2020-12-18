@@ -17,26 +17,46 @@ bool playing = false;
 hw_timer_t *audioTimer = NULL;
 // portMUX_TYPE audioTimerMux= portMUX_INITIALIZER_UNLOCKED;
 
+// notes
+// I2S has a 64 bytes buffer and uses DMA.
+// player->loop() takes around 650us to run. On begin it's 11650us, and can take 2500us from time to time
+
+volatile uint32_t audioCounter = 0;
+uint16_t prevAudioCounter = 0;
+
 void audio_init(){
 	audioOutput = new AudioOutputI2S();
 	audioOutput->SetPinout(I2S_CLK, I2S_WS, I2S_DATA);
 	audioFile = new AudioFileSourceFS(SD_MMC);
 	audioTags = new AudioFileSourceID3(audioFile);
 	player = new AudioGeneratorMP3();
-/*
-	audioTimer = timerBegin(0, 0, true);
-	timerAttachInterrupt(audioTimer, &audio_update, true);
-	timerAlarmWrite(audioTimer, 1800, true);
-	timerAlarmEnable(audioTimer);
-*/
+
+	audioTimer = timerBegin(0, 80, true);
+//	timerAttachInterrupt(audioTimer, &audio_update, true);
+	timerAttachInterrupt(audioTimer, &audio_int, true);
+	timerAlarmWrite(audioTimer, 1000, true);
+//	timerAlarmEnable(audioTimer);
+
 }
 
 void /*IRAM_ATTR*/ audio_update(){
 //	portENTER_CRITICAL_ISR(&audioTimerMux);
 	if(!playing) return;
-
+//	uint32_t counter = audioCounter;
 	player->loop();
+	uint16_t counter = audioCounter / 1000;
+	if(counter != prevAudioCounter){
+		prevAudioCounter = counter;
+//		display_playerProgress(counter, 300);
+	}
+//	counter = audioCounter - counter;
+//	Serial.printf("%i\n", counter);
+//	Serial.println("tick");
 //	portEXIT_CRITICAL_ISR(&audioTimerMux);
+}
+
+void audio_int(){
+	audioCounter++;
 }
 
 void audio_playTrack(MenuSong *track){
@@ -58,11 +78,14 @@ void audio_playTrack(MenuSong *track){
 		*audioTags = AudioFileSourceID3(audioFile, true);
 		player->begin(audioTags, audioOutput);
 		playing = true;
+		audioCounter = 0;
+		timerAlarmEnable(audioTimer);
+
 	}
 
 	// Display track infos
-	display_makePlayer(current->getArtist(), current->getAlbum(), current->getName(), current->getTrack());
-	display_playerProgress(0, 134);
+//	display_makePlayer(current->getArtist(), current->getAlbum(), current->getName(), current->getTrack());
+//	display_playerProgress(0, 134);
 	// Play track
 	// Update time every seconds
 	// 
@@ -81,11 +104,13 @@ void audio_pause(){
 	if(playing){
 		playing = false;
 //		audioOutput->SetGain(0);
+		timerAlarmDisable(audioTimer);
 		audioOutput->stop();
 	} else {
 		playing = true;
 //		audioOutput->SetGain(1);
 		audioOutput->begin();
+		timerAlarmEnable(audioTimer);
 	}
 }
 

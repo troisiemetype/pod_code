@@ -234,15 +234,19 @@ int16_t menu_sortRank(MenuItem *a, MenuItem *b){
 void menu_write(MenuList *list){
 //	Serial.printf("making menu %s\n", list->getName());
 //	display_makeMenuBG();
-	display_makeMenu(list->getName());
+//	display_makeMenu(list->getName());
+	display_pushHeader(list->getName());
 	MenuItem *item = list->getFirstDisplay();
 //	Serial.printf("menu @ %i\n", (int32_t)list);
 //	Serial.printf("focus @ %i\n", (int32_t)list->getFocus());
 	for(uint8_t i = 0; i < maxMenuItem; ++i){
 //		Serial.printf("item @ %i, named %s, focus : %i\n", (int32_t)item, item->getName(), item->hasFocus());
-		display_pushToMenu(item->getName(), item->hasFocus(), i);
+		display_pushMenu(item->getName(), item->hasFocus(), i);
 		item = list->getNext();
-		if(item == NULL) break;
+		if(item == NULL){
+			if(i < (maxMenuItem - 1)) display_pushMenuPadding(i + 1);
+			break;
+		}
 	}
 //	display_fillMenu();
 }
@@ -279,8 +283,8 @@ void menu_prev(){
 
 void menu_test(){
 //	display_vuMeter(testValue, 40, 190, 240);
-	display_makePlayer("Toto", "le meilleur de", "prout prout tralala", 1);
-	display_playerProgress(25, 195);
+//	display_makePlayer("Toto", "le meilleur de", "prout prout tralala", 1);
+//	display_playerProgress(25, 195);
 }
 
 void menu_testExit(){
@@ -311,7 +315,7 @@ void menu_cbTest(void *empty){
 	io_attachCBDown(menu_testValueMiddle);
 	io_attachCBRight(menu_testValuePlus);
 	io_attachCBLeft(menu_testValueMinus);
-	display_clearDisplay();
+//	display_clearDisplay();
 	menu_test();
 }
 
