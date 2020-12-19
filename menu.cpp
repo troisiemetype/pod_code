@@ -98,14 +98,18 @@ bool menu_init(){
 
 	XMLElement *currentNode = data_getSongList();
 
+//	Serial.println("create songs");
 	menu_createMusicSongs(songs, currentNode);
-
+//	Serial.println("songs created");
+	Serial.println("create other lists");
 	menu_createMusic(artists, albums, songs);
+	Serial.println("lists ok");
+
 
 //	menu_createMusicAlbums(albums, songs);
 //	menu_createMusicArtists(artists, songs);
 
-	songs->sortExternal(menu_sortByName);
+	songs->sort();
 /*
 	tft.printf("size of MenuItem : %i\n", sizeof(*i));
 	tft.printf("size of MenuList : %i\n", sizeof(*menu));
@@ -122,9 +126,11 @@ bool menu_init(){
 // Create the music/song menu, that will be the base for the other ones.
 bool menu_createMusicSongs(MenuList *list, XMLElement *currentNode){
 //	tft.println("parsing songs database");
-	MenuSong *song;
+	AudioTrackData *song;
+	MenuItem *songEntry;
 	for(;;){
-		song = new MenuSong();
+		songEntry = new MenuItem();
+		song = new AudioTrackData();
 		song->setFilename(menu_getXMLTextField(currentNode, "filename"));
 		song->setName(menu_getXMLTextField(currentNode, "name"));
 		song->setArtist(menu_getXMLTextField(currentNode, "artist"));
@@ -132,14 +138,21 @@ bool menu_createMusicSongs(MenuList *list, XMLElement *currentNode){
 		song->setTrack(menu_getXMLNumberField(currentNode, "track"));
 		song->setSet(menu_getXMLNumberField(currentNode, "set"));
 		song->setYear(menu_getXMLNumberField(currentNode, "year"));
-		song->attachCallback(menu_cbSong, song);
-		list->addChild(song);
+//		Serial.printf("song %s\t", song->getName());
+		songEntry->attachCallback(menu_cbSong, song);
+//		Serial.printf("callback\t");
+		songEntry->attachData(reinterpret_cast<void*>(song));
+//		Serial.printf("data\t");
+		songEntry->attachName(song->getName());
+//		Serial.printf("name\t");
+		list->addChild(songEntry);
+//		Serial.printf("ok\n");
 
 		currentNode = currentNode->NextSiblingElement();
 		if(currentNode == NULL) break;
 	}
 
-	list->sortExternal(menu_sortByName);
+	list->sort();
 	return 0;
 }
 
@@ -147,11 +160,14 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 	ref->sortExternal(menu_sortByTrack);
 	ref->sortExternal(menu_sortByAlbum);
 	ref->sortExternal(menu_sortByArtist);
-	MenuSong *lastSong = (MenuSong*)ref->getLast();
-	MenuSong *song = (MenuSong*)(ref->getFirst());
+//	Serial.println("sorted");
+	MenuItem *lastItem = ref->getLast();
+	MenuItem *item = ref->getFirst();
 	MenuList *listArtists = NULL;
 	MenuList *listArtistsAlbums = NULL;
 	MenuList *listAlbums = NULL;
+	AudioTrackData *song = reinterpret_cast<AudioTrackData*>(item->getData());
+	AudioTrackData *lastSong = reinterpret_cast<AudioTrackData*>(lastItem->getData());
 
 //		Serial.printf("%i\t | %s\t\t | %s\t\t | %s\t\t\n", song->getTrack(), song->getArtist(), song->getAlbum(), song->getName());
 	// artists parsing
@@ -178,23 +194,34 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 			// songs parsing
 			for(;;){
 //				Serial.printf("\t\t%s\n", song->getName());
-				listAlbums->addChild(new MenuSong(*song));
-				listArtistsAlbums->addChild(new MenuSong(*song));
+//				listAlbums->addChild(new MenuItem(*song));
+				MenuItem *newItem = new MenuItem();
+				newItem->attachData(song);
+				newItem->attachName(song->getName());
+				listAlbums->addChild(newItem);
 
-				lastSong = song;
-				song = (MenuSong*)ref->getNext();
-				if((song == NULL) || (strcmp(song->getAlbum(), lastSong->getAlbum()))){
+				newItem = new MenuItem();
+				newItem->attachData(song);
+				newItem->attachName(song->getName());
+				listArtistsAlbums->addChild(newItem);
+
+				lastItem = item;
+				item = ref->getNext();
+
+				if((item == NULL) || (strcmp(song->getAlbum(), lastSong->getAlbum()))){
 					listAlbums->sortExternal(menu_sortByTrack);
 					listArtistsAlbums->sortExternal(menu_sortByTrack);
 					break;
 				}
+				lastSong = song;
+				song = reinterpret_cast<AudioTrackData*>(item->getData());
 			}
-			if((song == NULL) || (strcmp(song->getArtist(), lastSong->getArtist()))){
-				listArtists->sortExternal(menu_sortByName);
+			if((item == NULL) || (strcmp(song->getArtist(), lastSong->getArtist()))){
+				listArtists->sort();
 				break;
 			}
 		}
-		if(song == NULL){
+		if(item == NULL){
 			break;
 		}
 		albums->sortExternal(menu_sortByName);
@@ -203,31 +230,45 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 }
 
 int16_t menu_sortByName(MenuItem *a, MenuItem *b){
-	return strcmp(a->getName(), b->getName());
+	AudioTrackData *_a = reinterpret_cast<AudioTrackData*>(a->getData());
+	AudioTrackData *_b = reinterpret_cast<AudioTrackData*>(b->getData());
+	return strcmp(_a->getName(), _b->getName());
 }
 
 int16_t menu_sortByArtist(MenuItem *a, MenuItem *b){
-	return strcmp(((MenuSong*)a)->getArtist(), ((MenuSong*)b)->getArtist());
+	AudioTrackData *_a = reinterpret_cast<AudioTrackData*>(a->getData());
+	AudioTrackData *_b = reinterpret_cast<AudioTrackData*>(b->getData());
+	return strcmp(_a->getArtist(), _b->getArtist());
 }
 
 int16_t menu_sortByAlbum(MenuItem *a, MenuItem *b){
-	return strcmp(((MenuSong*)a)->getAlbum(), ((MenuSong*)b)->getAlbum());
+	AudioTrackData *_a = reinterpret_cast<AudioTrackData*>(a->getData());
+	AudioTrackData *_b = reinterpret_cast<AudioTrackData*>(b->getData());
+	return strcmp(_a->getAlbum(), _b->getAlbum());
 }
 
 int16_t menu_sortByYear(MenuItem *a, MenuItem *b){
-	return (((MenuSong*)a)->getYear() - ((MenuSong*)b)->getYear());
+	AudioTrackData *_a = reinterpret_cast<AudioTrackData*>(a->getData());
+	AudioTrackData *_b = reinterpret_cast<AudioTrackData*>(b->getData());
+	return (_a->getYear() - _b->getYear());
 }
 
 int16_t menu_sortByTrack(MenuItem *a, MenuItem *b){
-	return (((MenuSong*)a)->getTrack() - ((MenuSong*)b)->getTrack());
+	AudioTrackData *_a = reinterpret_cast<AudioTrackData*>(a->getData());
+	AudioTrackData *_b = reinterpret_cast<AudioTrackData*>(b->getData());
+	return (_a->getTrack() - _b->getTrack());
 }
 
 int16_t menu_sortBySet(MenuItem *a, MenuItem *b){
-	return (((MenuSong*)a)->getSet() - ((MenuSong*)b)->getSet());
+	AudioTrackData *_a = reinterpret_cast<AudioTrackData*>(a->getData());
+	AudioTrackData *_b = reinterpret_cast<AudioTrackData*>(b->getData());
+	return (_a->getSet() - _b->getSet());
 }
 
 int16_t menu_sortRank(MenuItem *a, MenuItem *b){
-	return (((MenuSong*)a)->getPop() - ((MenuSong*)b)->getPop());
+	AudioTrackData *_a = reinterpret_cast<AudioTrackData*>(a->getData());
+	AudioTrackData *_b = reinterpret_cast<AudioTrackData*>(b->getData());
+	return (_a->getPop() - _b->getPop());
 }
 
 // Display the current menu on screen.
@@ -338,7 +379,7 @@ void menu_cbList(void* list){
 // The callback function to be attached to MenuItem objects, when selecting them.
 void menu_cbSong(void *data){
 //	tft.print("song called");
-	audio_playTrack((MenuSong*)data);
+	audio_playTrack((AudioTrackData*)data);
 }
 
 void menu_cbPlayer(void *data){

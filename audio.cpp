@@ -10,7 +10,7 @@ const uint8_t I2S_CLK = 16;
 const uint8_t I2S_DATA = 21;
 const uint8_t I2S_WS = 22;
 
-MenuSong *current = NULL;
+AudioTrackData *current = NULL;
 
 bool playing = false;
 
@@ -54,7 +54,7 @@ void audio_int(){
 	if(playing) audioCounter++;
 }
 
-void audio_playTrack(MenuSong *track){
+void audio_playTrack(AudioTrackData *track){
 	// set track infos
 	if(current != track){
 		current = track;

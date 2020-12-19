@@ -14,6 +14,7 @@
 #include "wheel.h"
 
 
+#include "AudioTrackData.h"
 #include "io.h"
 #include "fonts.h"
 #include "display.h"
