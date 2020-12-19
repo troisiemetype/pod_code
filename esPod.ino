@@ -11,6 +11,7 @@ void sandbox(){
 void setup(){
 
 	Serial.begin(115200);
+	Serial.printf("setup running on core %i\n", xPortGetCoreID());
 
 	log_d("Total heap: %d", ESP.getHeapSize());
 	log_d("Free heap: %d", ESP.getFreeHeap());
@@ -50,10 +51,23 @@ void setup(){
 	log_d("Total heap: %d", ESP.getHeapSize());
 	log_d("Free heap: %d", ESP.getFreeHeap());
 
+	xTaskCreatePinnedToCore(audioLoop, "audioLoop", 10000, NULL, 1, NULL, 0);
+
 }
 
 void loop(){
-	audio_update();
+//	audio_update();
 	io_update();
 	display_update();
+}
+
+void audioLoop(void *params){
+	for(;;){
+		audio_update();
+		vTaskDelay(1 / portTICK_PERIOD_MS);
+	}
+}
+
+void displayLoop(void *params){
+	
 }

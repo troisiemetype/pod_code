@@ -14,7 +14,7 @@
 
 void audio_init();
 
-void audio_update();
+bool audio_update();
 void audio_int();
 
 void audio_playTrack(MenuSong *track);
@@ -22,6 +22,9 @@ void audio_playTrack(MenuSong *track);
 void audio_nextTrack();
 void audio_prevTrack();
 void audio_pause();
+
+void audio_mute();
+void audio_unmute();
 
 bool audio_getTag(fs::File *file);
 

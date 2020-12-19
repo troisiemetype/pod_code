@@ -235,6 +235,7 @@ void menu_write(MenuList *list){
 //	Serial.printf("making menu %s\n", list->getName());
 //	display_makeMenuBG();
 //	display_makeMenu(list->getName());
+	display_setState(MENU);
 	display_pushHeader(list->getName());
 	MenuItem *item = list->getFirstDisplay();
 //	Serial.printf("menu @ %i\n", (int32_t)list);

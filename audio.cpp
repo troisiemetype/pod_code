@@ -32,31 +32,26 @@ void audio_init(){
 	player = new AudioGeneratorMP3();
 
 	audioTimer = timerBegin(0, 80, true);
-//	timerAttachInterrupt(audioTimer, &audio_update, true);
 	timerAttachInterrupt(audioTimer, &audio_int, true);
 	timerAlarmWrite(audioTimer, 1000, true);
 //	timerAlarmEnable(audioTimer);
 
 }
 
-void /*IRAM_ATTR*/ audio_update(){
-//	portENTER_CRITICAL_ISR(&audioTimerMux);
-	if(!playing) return;
-//	uint32_t counter = audioCounter;
-	player->loop();
+bool audio_update(){
+	if(!playing) return false;
+	bool running = player->loop();
 	uint16_t counter = audioCounter / 1000;
 	if(counter != prevAudioCounter){
 		prevAudioCounter = counter;
-//		display_playerProgress(counter, 300);
+		display_pushPlayerProgress(counter, 300);
 	}
-//	counter = audioCounter - counter;
-//	Serial.printf("%i\n", counter);
-//	Serial.println("tick");
-//	portEXIT_CRITICAL_ISR(&audioTimerMux);
+
+	return running;
 }
 
 void audio_int(){
-	audioCounter++;
+	if(playing) audioCounter++;
 }
 
 void audio_playTrack(MenuSong *track){
@@ -80,12 +75,14 @@ void audio_playTrack(MenuSong *track){
 		playing = true;
 		audioCounter = 0;
 		timerAlarmEnable(audioTimer);
-
 	}
 
 	// Display track infos
-//	display_makePlayer(current->getArtist(), current->getAlbum(), current->getName(), current->getTrack());
-//	display_playerProgress(0, 134);
+	display_setState(PLAYER);
+	display_pushHeader("playing");
+	display_pushClearDisplay();
+	display_pushPlayer(current->getArtist(), current->getAlbum(), current->getName(), current->getTrack());
+	display_pushPlayerProgress(audioCounter / 1000, 134);
 	// Play track
 	// Update time every seconds
 	// 
@@ -104,16 +101,23 @@ void audio_pause(){
 	if(playing){
 		playing = false;
 //		audioOutput->SetGain(0);
-		timerAlarmDisable(audioTimer);
+//		timerAlarmDisable(audioTimer);
 		audioOutput->stop();
 	} else {
 		playing = true;
 //		audioOutput->SetGain(1);
 		audioOutput->begin();
-		timerAlarmEnable(audioTimer);
+//		timerAlarmEnable(audioTimer);
 	}
 }
 
+void audio_mute(){
+
+}
+
+void audio_unmute(){
+
+}
 
 bool audio_getTag(fs::File* file){
 	String name = file->name();

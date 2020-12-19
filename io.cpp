@@ -162,7 +162,7 @@ void io_updateBattery(){
 	if((millis() - cnt) > 2){
 		cnt = millis();
 		if(++batLevel > 4095) batLevel = 0;
-//		display_battery((float)batLevel / 4095);
+		display_pushBattery((float)batLevel / 4095);
 	}
 }
 
