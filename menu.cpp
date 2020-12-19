@@ -168,6 +168,7 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 	MenuList *listAlbums = NULL;
 	AudioTrackData *song = reinterpret_cast<AudioTrackData*>(item->getData());
 	AudioTrackData *lastSong = reinterpret_cast<AudioTrackData*>(lastItem->getData());
+//	Serial.printf("first song : %s\n", song->getFilename());
 
 //		Serial.printf("%i\t | %s\t\t | %s\t\t | %s\t\t\n", song->getTrack(), song->getArtist(), song->getAlbum(), song->getName());
 	// artists parsing
@@ -195,18 +196,23 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 			for(;;){
 //				Serial.printf("\t\t%s\n", song->getName());
 //				listAlbums->addChild(new MenuItem(*song));
+//				Serial.printf("item @%i", (uint32_t)item);
+//				Serial.printf("adding %s to menu\n", song->getFilename());
 				MenuItem *newItem = new MenuItem();
 				newItem->attachData(song);
 				newItem->attachName(song->getName());
 				listAlbums->addChild(newItem);
-
+				// TODO: try copy constructor
 				newItem = new MenuItem();
 				newItem->attachData(song);
 				newItem->attachName(song->getName());
 				listArtistsAlbums->addChild(newItem);
 
 				lastItem = item;
+				lastSong = song;
 				item = ref->getNext();
+				lastSong = song;
+				if(item != NULL) song = reinterpret_cast<AudioTrackData*>(item->getData());
 
 				if((item == NULL) || (strcmp(song->getAlbum(), lastSong->getAlbum()))){
 					listAlbums->sortExternal(menu_sortByTrack);
@@ -224,7 +230,7 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 		if(item == NULL){
 			break;
 		}
-		albums->sortExternal(menu_sortByName);
+		albums->sort();
 	}
 	return 1;
 }

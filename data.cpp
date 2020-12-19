@@ -156,14 +156,14 @@ bool data_checkDir(fs::File *dir){
 	dirNode = dirData->RootElement()->FirstChildElement();
 	for(;;){
 		if(!dirNode){
-			Serial.println("no dir data");
+//			Serial.println("no dir data");
 			break;
 		}
 		if(strcmp(dir->name(), dirNode->FirstChildElement()->GetText()) == 0){
 			int32_t value = 0;
 			dirNode->FirstChildElement("time")->QueryIntText(&value);
 			if(dir->getLastWrite() == value){
-				Serial.printf("%s found.\n", name);
+//				Serial.printf("%s found.\n", name);
 				return 0;
 			}
 		}
@@ -175,7 +175,7 @@ bool data_checkDir(fs::File *dir){
 	dirNode->InsertNewChildElement("name")->SetText(dir->name());
 	dirNode->InsertNewChildElement("time")->SetText((int32_t)(dir->getLastWrite()));
 
-	Serial.printf("%s created.\n", name);
+//	Serial.printf("%s created.\n", name);
 	return 1;
 }
 
@@ -187,7 +187,7 @@ void data_checkSong(fs::File *file){
 	for(;;){
 		if(!currentNode) break;
 		if(strcmp(currentNode->FirstChildElement("filename")->GetText(), name) == 0){
-			Serial.printf("checked\t%s\n", name);
+//			Serial.printf("checked\t%s\n", name);
 			fileID++;
 			return;
 		}
@@ -214,7 +214,7 @@ void data_checkSong(fs::File *file){
 		while(player->isRunning()){
 			player->loop();
 		}
-		Serial.printf("added\t%s\n", name);
+//		Serial.printf("added\t%s\n", name);
 	}
 
 }
