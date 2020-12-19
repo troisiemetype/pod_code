@@ -46,6 +46,22 @@ enum timeType_t{
 	TOTAL,
 };
 
+struct theme_t{
+	uint16_t headerBg;
+	uint16_t headerTxt;
+	uint16_t bg;
+	uint16_t bgSelect;
+	uint16_t txt;
+	uint16_t txtSelect;
+	uint16_t vuBg;
+	uint16_t vuFg;
+	uint16_t vuCtr;
+	uint16_t batEmpty;
+	uint16_t batHalf;
+	uint16_t batFull;
+	bool gradient;
+};
+
 struct displaySetting_t{
 	uint16_t backgroundColor;
 	uint16_t fontColor;
@@ -112,6 +128,9 @@ void display_initBacklight();
 void display_setBackLight(uint8_t value);
 
 void display_setState(displayState_t state);
+
+theme_t display_getTheme();
+void display_setTheme(theme_t newTheme);
 
 void display_update();
 

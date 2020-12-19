@@ -5,13 +5,16 @@ extern 	AudioGenerator *player;
 
 const char* songDatabase = "/system/data/songs.xml";
 const char* dirDatabase = "/system/data/dir.xml";
+const char* themeDatabase = "/system/data/theme.xml";
 
 using namespace tinyxml2;
 
 XMLDocument *songData = NULL;
 XMLDocument *dirData = NULL;
+XMLDocument *themeData = NULL;
 XMLElement *currentNode = NULL;
 XMLElement *dirNode = NULL;
+XMLElement *themeNode = NULL;
 
 uint32_t fileID = 0;
 
@@ -34,6 +37,14 @@ void data_init(){
 		dirNode = (XMLElement*)dirData->InsertFirstChild(dirNode);
 	}
 
+	themeData = new XMLDocument();
+	if(themeData->LoadFile(themeDatabase)){
+		themeNode = themeData->NewElement("themes");
+		themeNode = (XMLElement*)themeData->InsertFirstChild(themeNode);
+	}
+
+
+
 //	Serial.println("listing files.");
 	data_checkNewFiles();
 //	data_checkDeletedFiles();
@@ -45,8 +56,10 @@ void data_init(){
 void data_empty(){
 	currentNode = NULL;
 	dirNode = NULL;
+	themeNode = NULL;
 	delete songData;
 	delete dirData;
+	delete themeData;
 }
 
 // List file from SD card, then save them to a raw XML containing metadata.
@@ -241,4 +254,12 @@ void data_getFileTags(void *cbData, const char *type, bool isUnicode, const char
 		currentNode = (XMLElement*)currentNode->Parent();
 		return;
 	}
+}
+
+theme_t* data_getTheme(theme_t *theme){
+
+}
+
+void data_updateTheme(const char *name){
+
 }

@@ -40,6 +40,22 @@ TFT_eSprite timeSprite = TFT_eSprite(&tft);
 
 uint16_t *sprPtr = NULL;
 
+theme_t theme = {
+	0x528A,
+	TFT_LIGHTGREY,
+	TFT_DARKGREY,
+	0xFC20,
+	TFT_LIGHTGREY,
+	TFT_BLACK,
+	0x528A,
+	0xFC20,
+	0xD360,
+	TFT_RED,
+	0xD360,
+	TFT_DARKGREEN,
+	false
+};
+
 void display_init(){
 	display_initBacklight();
 	tft.init();
@@ -77,7 +93,35 @@ void display_init(){
 	menuBuffer = new lineData_t[DISPLAY_MAX_MENU_ITEM];
 
 	displayState = IDLE;
+/*
+	theme.headerBg = COLOR_HEADER;
+	theme.headerTxt = COLOR_TXT;
+	theme.bg = COLOR_BG;
+	theme.bgSelect = COLOR_BG_SELECT;
+	theme.txt = COLOR_TXT;
+	theme.txtSelect = COLOR_TXT_SELECT;
+	theme.vuBg = TFT_DARKGREY;
+	theme.vuFg = COLOR_BG_SELECT;
+	theme.vuCtr = TFT_DARKGREEN;
+	theme.gradient = false;
 
+	uint16_t orange = 0xFC20;
+	uint16_t grey = 0x528A;
+	uint16_t darkorange = 0xD360;
+	theme.headerBg = grey;
+	theme.headerTxt = TFT_LIGHTGREY;
+	theme.bg = TFT_DARKGREY;
+	theme.bgSelect = orange;
+	theme.txt = TFT_LIGHTGREY;
+	theme.txtSelect = TFT_BLACK;
+	theme.vuBg = grey;
+	theme.vuFg = orange;
+	theme.vuCtr = darkorange;
+	theme.batEmpty = TFT_RED;
+	theme.batHalf = darkorange;
+	theme.batFull = TFT_DARKGREEN;
+	theme.gradient = false;
+*/
 	display_initSprites();
 
 //	tft.println("esp pod");
@@ -93,9 +137,9 @@ void display_initSprites(){
 	headerSprite.setColorDepth(16);
 	headerSprite.loadFont(NotoSansBold15);
 	headerSprite.createSprite(SCREEN_WIDTH, DISPLAY_HEADER_HEIGHT);
-	headerSprite.fillSprite(COLOR_HEADER);
+	headerSprite.fillSprite(theme.headerBg);
 	headerSprite.setTextPadding(0);
-	headerSprite.setTextColor(COLOR_TXT, COLOR_HEADER);
+	headerSprite.setTextColor(theme.txt, theme.headerBg);
 	headerSprite.setTextDatum(ML_DATUM);
 
 	menuSprite.setColorDepth(16);
@@ -108,13 +152,13 @@ void display_initSprites(){
 
 	vuSprite.setColorDepth(16);
 //	vuSprite.createSprite(DISPLAY_VU_WIDTH, DISPLAY_VU_HEIGHT);
-	vuSprite.fillSprite(COLOR_BG);
+	vuSprite.fillSprite(theme.bg);
 	vuSprite.drawRoundRect(0, 0, DISPLAY_VU_WIDTH, DISPLAY_VU_HEIGHT, 3, TFT_DARKGREEN);
 
 	timeSprite.setColorDepth(16);
 	timeSprite.createSprite(DISPLAY_TIME_WIDTH, DISPLAY_TIME_HEIGHT);
 	timeSprite.loadFont(NotoSans15);
-	timeSprite.setTextColor(COLOR_TXT, COLOR_BG);
+	timeSprite.setTextColor(theme.txt, theme.bg);
 	timeSprite.setTextPadding(0);
 
 }
@@ -133,6 +177,14 @@ void display_setState(displayState_t state){
 	displayState = state;
 }
 
+theme_t display_getTheme(){
+	return theme;
+}
+
+void display_setTheme(theme_t newTheme){
+	theme = newTheme;
+}
+
 void display_update(){
 	if(tft.dmaBusy()) return;
 
@@ -140,148 +192,6 @@ void display_update(){
 	_display_consumeBuffer();
 //	tft.endWrite();
 }
-
-void _display_updateClearDisplay(void *data){
-
-}
-
-void _display_updateClearAll(void *data){
-
-}
-
-void _display_updateHeader(void *data){
-	sprPtr = reinterpret_cast<uint16_t*>(headerSprite.getPointer());
-
-	headerSprite.fillSprite(COLOR_HEADER);
-	headerSprite.setTextColor(COLOR_TXT, COLOR_HEADER);
-	headerSprite.drawString(displayHeaderData.name, 2, 11);
-	tft.pushImageDMA(0, 0, SCREEN_WIDTH, DISPLAY_HEADER_HEIGHT, sprPtr);
-
-}
-
-void _display_updateLine(void *data){
-	lineData_t *bf = reinterpret_cast<lineData_t*>(data);
-	sprPtr = reinterpret_cast<uint16_t*>(entrySprite.getPointer());
-
-//	Serial.printf("displaying menu %s, active : %i; pos : %i\n", bf->name, bf->active, bf->pos);
-	entrySprite.fillSprite(bf->active ? COLOR_BG_SELECT : COLOR_BG);
-	entrySprite.setTextColor(bf->active ? COLOR_TXT_SELECT : COLOR_TXT, bf->active ? COLOR_BG_SELECT : COLOR_BG);
-	entrySprite.drawString(bf->name, 1, 11);
-	tft.pushImageDMA(0, bf->pos, SCREEN_WIDTH, DISPLAY_MENU_LINE_HEIGHT, sprPtr);
-}
-
-void _display_updateLineThin(void *data){
-	lineData_t *bf = reinterpret_cast<lineData_t*>(data);
-	sprPtr = reinterpret_cast<uint16_t*>(entrySprite.getPointer());	
-
-	entrySprite.loadFont(NotoSans16);
-	entrySprite.fillSprite(COLOR_BG);
-	entrySprite.drawString(bf->name, 1, 11);
-	tft.pushImageDMA(0, bf->pos, SCREEN_WIDTH, DISPLAY_MENU_LINE_HEIGHT, sprPtr);
-
-	entrySprite.loadFont(NotoSansBold16);
-}
-
-void _display_updatePlayerProgress(void *data){
-	timeData_t *bf = reinterpret_cast<timeData_t*>(data);
-
-	uint8_t minutes = bf->current / 60;
-	uint8_t seconds = bf->current % 60;
-	uint8_t rMinutes = (bf->total - bf->current) / 60;
-	uint8_t rSeconds = (bf->total - bf->current) % 60;
-
-	String secs = String(seconds / 10) + String(seconds % 10);
-
-	timeSprite.fillSprite(COLOR_BG);
-	timeSprite.setTextDatum(MR_DATUM);
-	timeSprite.drawNumber(minutes, 18, 11);
-	timeSprite.setTextDatum(MC_DATUM);
-	timeSprite.drawString(":", 20, 11);
-	timeSprite.setTextDatum(ML_DATUM);
-	timeSprite.drawString(secs, 23, 11);
-	timeSprite.pushSprite(0, 200);
-
-	secs = String(rSeconds / 10) + String(rSeconds % 10);
-
-	timeSprite.fillSprite(COLOR_BG);
-	timeSprite.setTextDatum(MR_DATUM);
-	timeSprite.drawString("-", 3, 11);
-	timeSprite.drawNumber(rMinutes, 18, 11);
-	timeSprite.setTextDatum(MC_DATUM);
-	timeSprite.drawString(":", 20, 11);
-	timeSprite.setTextDatum(ML_DATUM);
-	timeSprite.drawString(secs, 23, 11);
-	timeSprite.pushSprite(270, 200);
-}
-
-void _display_updatePlayerVolume(void *data){
-
-}
-
-void _display_updateTime(void *data){
-	timeData_t *bf = reinterpret_cast<timeData_t*>(data);
-
-	uint8_t minutes = bf->current / 60;
-	uint8_t seconds = bf->current % 60;
-
-	if(bf->type == REMAINING){
-		minutes = (bf->total - bf->current) / 60;
-		seconds = (bf->total - bf->current) % 60;
-	} else if(bf->type == TOTAL){
-		minutes = bf->total / 60;
-		seconds = bf->total % 60;
-	}
-
-	String secs = String(seconds / 10) + String(seconds % 10);
-
-	timeSprite.fillSprite(COLOR_BG);
-	timeSprite.setTextDatum(MR_DATUM);
-	if(bf->type == REMAINING) timeSprite.drawString("-", 8, 11);
-	timeSprite.drawNumber(minutes, 23, 11);
-	timeSprite.setTextDatum(MC_DATUM);
-	timeSprite.drawString(":", 25, 11);
-	timeSprite.setTextDatum(ML_DATUM);
-	timeSprite.drawString(secs, 28, 11);
-	timeSprite.pushSprite(bf->x, bf->y);
-
-}
-
-void _display_updateVuMeter(void *data){
-	vuData_t *bf = reinterpret_cast<vuData_t*>(data);
-	if(bf->value < 0) bf->value = 0;
-	if(bf->value > 1) bf->value = 1;
-	uint16_t dspValue = bf->value * bf->width;
-
-	vuSprite.deleteSprite();
-
-	sprPtr = reinterpret_cast<uint16_t*>(vuSprite.createSprite(bf->width, bf->height));	
-
-	vuSprite.fillSprite(COLOR_BG);
-	vuSprite.drawRoundRect(0, 0, bf->width, bf->height, 3, TFT_DARKGREEN);
-	vuSprite.fillRoundRect(1, 1, dspValue - 2, bf->height - 2, 2, COLOR_BG_SELECT);
-	tft.pushImageDMA(bf->x, bf->y, bf->width, bf->height, sprPtr);
-}
-
-void _display_updateBattery(void *data){
-	uint8_t width = 30;
-	float value = displayBattery;
-	if(value < 0) value = 0;
-	if(value > 1) value = 1;
-
-	uint16_t dspValue = value * (width - 3);
-	uint16_t color = tft.alphaBlend((value * 255), TFT_GREEN, TFT_RED);
-
-	vuSprite.deleteSprite();
-	sprPtr = reinterpret_cast<uint16_t*>(vuSprite.createSprite(width, 11));	
-
-	vuSprite.fillSprite(COLOR_HEADER);
-	vuSprite.fillRoundRect(0, 0, width - 2, 11, 2, TFT_DARKGREY);
-	vuSprite.drawRoundRect(0, 0, width - 2, 11, 2, TFT_DARKGREEN);
-	vuSprite.drawFastVLine(width - 1, 3, 6, TFT_DARKGREEN);
-	vuSprite.fillRoundRect(1, 1, dspValue, 9, 1, color);
-	tft.pushImageDMA(280, 5, width, 11, sprPtr);
-}
-
 
 uint8_t display_getMaxMenuItem(){
 	return DISPLAY_MAX_MENU_ITEM;
@@ -295,8 +205,8 @@ void display_setTermMode(){
 }
 
 void display_setRunningMode(){
-	tft.fillScreen(COLOR_BG);
-	tft.setTextColor(COLOR_TXT, COLOR_BG);
+	tft.fillScreen(theme.bg);
+	tft.setTextColor(theme.txt, theme.bg);
 //	tft.loadFont(NotoSansBold16);
 //	tft.printf("line height : %i\n", tft.fontHeight());
 //	String filename = "system/fonts/NotoSansMono14";
@@ -438,21 +348,123 @@ void _display_consumeBuffer(){
 	displayQueue.available++;
 }
 
-void display_battery(float value){
+void _display_updateClearDisplay(void *data){
+
+}
+
+void _display_updateClearAll(void *data){
+
+}
+
+void _display_updateHeader(void *data){
+	sprPtr = reinterpret_cast<uint16_t*>(headerSprite.getPointer());
+
+	headerSprite.fillSprite(theme.headerBg);
+	headerSprite.setTextColor(theme.txt, theme.headerBg);
+	headerSprite.drawString(displayHeaderData.name, 2, 11);
+	tft.pushImageDMA(0, 0, SCREEN_WIDTH, DISPLAY_HEADER_HEIGHT, sprPtr);
+
+}
+
+void _display_updateLine(void *data){
+	lineData_t *bf = reinterpret_cast<lineData_t*>(data);
+	sprPtr = reinterpret_cast<uint16_t*>(entrySprite.getPointer());
+
+//	Serial.printf("displaying menu %s, active : %i; pos : %i\n", bf->name, bf->active, bf->pos);
+	entrySprite.fillSprite(bf->active ? theme.bgSelect : theme.bg);
+	entrySprite.setTextColor(bf->active ? theme.txtSelect : theme.txt, bf->active ? theme.bgSelect : theme.bg);
+	entrySprite.drawString(bf->name, 1, 11);
+	tft.pushImageDMA(0, bf->pos, SCREEN_WIDTH, DISPLAY_MENU_LINE_HEIGHT, sprPtr);
+}
+
+void _display_updateLineThin(void *data){
+	lineData_t *bf = reinterpret_cast<lineData_t*>(data);
+	sprPtr = reinterpret_cast<uint16_t*>(entrySprite.getPointer());	
+
+	entrySprite.loadFont(NotoSans16);
+	entrySprite.fillSprite(theme.bg);
+	entrySprite.drawString(bf->name, 1, 11);
+	tft.pushImageDMA(0, bf->pos, SCREEN_WIDTH, DISPLAY_MENU_LINE_HEIGHT, sprPtr);
+
+	entrySprite.loadFont(NotoSansBold16);
+}
+
+void _display_updatePlayerProgress(void *data){
+
+}
+
+void _display_updatePlayerVolume(void *data){
+
+}
+
+void _display_updateTime(void *data){
+	timeData_t *bf = reinterpret_cast<timeData_t*>(data);
+
+	uint8_t minutes = bf->current / 60;
+	uint8_t seconds = bf->current % 60;
+
+	if(bf->type == REMAINING){
+		minutes = (bf->total - bf->current) / 60;
+		seconds = (bf->total - bf->current) % 60;
+	} else if(bf->type == TOTAL){
+		minutes = bf->total / 60;
+		seconds = bf->total % 60;
+	}
+
+	String secs = String(seconds / 10) + String(seconds % 10);
+
+	timeSprite.fillSprite(theme.bg);
+	timeSprite.setTextDatum(MR_DATUM);
+	if(bf->type == REMAINING) timeSprite.drawString("-", 8, 11);
+	timeSprite.drawNumber(minutes, 23, 11);
+	timeSprite.setTextDatum(MC_DATUM);
+	timeSprite.drawString(":", 25, 11);
+	timeSprite.setTextDatum(ML_DATUM);
+	timeSprite.drawString(secs, 28, 11);
+	timeSprite.pushSprite(bf->x, bf->y);
+
+}
+
+void _display_updateVuMeter(void *data){
+	vuData_t *bf = reinterpret_cast<vuData_t*>(data);
+	if(bf->value < 0) bf->value = 0;
+	if(bf->value > 1) bf->value = 1;
+	uint16_t dspValue = bf->value * bf->width;
+
+	vuSprite.deleteSprite();
+
+	sprPtr = reinterpret_cast<uint16_t*>(vuSprite.createSprite(bf->width, bf->height));	
+
+	vuSprite.fillSprite(theme.bg);
+	vuSprite.drawRoundRect(0, 0, bf->width, bf->height, 3, theme.vuCtr);
+	vuSprite.fillRoundRect(1, 1, dspValue - 2, bf->height - 2, 2, theme.bgSelect);
+	tft.pushImageDMA(bf->x, bf->y, bf->width, bf->height, sprPtr);
+}
+
+void _display_updateBattery(void *data){
 	uint8_t width = 30;
+	float value = displayBattery;
 	if(value < 0) value = 0;
 	if(value > 1) value = 1;
 
 	uint16_t dspValue = value * (width - 3);
-	uint16_t color = tft.alphaBlend((value * 255), TFT_GREEN, TFT_RED);
-
-	vuSprite.createSprite(width, 11);
-	vuSprite.fillSprite(COLOR_HEADER);
-	vuSprite.fillRoundRect(0, 0, width - 2, 11, 2, TFT_DARKGREY);
-	vuSprite.drawRoundRect(0, 0, width - 2, 11, 2, TFT_DARKGREEN);
-	vuSprite.drawFastVLine(width - 1, 3, 6, TFT_DARKGREEN);
-	vuSprite.fillRoundRect(1, 1, dspValue, 9, 1, color);
-	vuSprite.pushSprite(280, 5);
+	uint16_t color;
+	if(value < 0.25){
+		value *= 4;
+		color = tft.alphaBlend((value * 255), theme.batHalf, theme.batEmpty);
+	} else {
+		value -= 0.25;
+		value *= 1.3;
+		color = tft.alphaBlend((value * 255), theme.batFull, theme.batHalf);
+	}
 
 	vuSprite.deleteSprite();
+	sprPtr = reinterpret_cast<uint16_t*>(vuSprite.createSprite(width, 11));	
+
+	vuSprite.fillSprite(theme.headerBg);
+	vuSprite.fillRoundRect(0, 0, width - 2, 11, 2, theme.vuBg);
+	vuSprite.drawRoundRect(0, 0, width - 2, 11, 2, theme.vuCtr);
+	vuSprite.drawFastVLine(width - 1, 3, 6, theme.vuCtr);
+	vuSprite.fillRoundRect(1, 1, dspValue, 9, 1, color);
+	tft.pushImageDMA(280, 5, width, 11, sprPtr);
 }

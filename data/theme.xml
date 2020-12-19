@@ -1,0 +1,17 @@
+<themes>
+	<theme name="default">
+		<header_background>0x404040</header_background>
+		<header_text>0xD0D0D0</header_text>
+		<background>0x808080</background>
+		<background_select>0xFF8600</background_select>
+		<text>0xD0D0D0</text>
+		<text_select>0xFFFFFF</text_select>
+		<vu_background>0x404040</vu_background>
+		<vu_foreground>0xFF8600</vu_foreground>
+		<vu_countour>0xD16E00</vu_countour>
+		<battery_empty>0xFF0000</battery_empty>
+		<battery_half>0xFFFF00</battery_half>
+		<battery_full>0x00FF00</battery_full>
+		<gradient>false</gradient>
+	</theme>
+</themes>

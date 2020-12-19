@@ -19,5 +19,7 @@ tinyxml2::XMLElement* data_getSongList();
 
 void data_getFileTags(void *cbData, const char *type, bool isUnicode, const char *string);
 
+theme_t* data_getTheme(theme_t *theme);
+void data_updateTheme(const char *name);
 
 #endif
