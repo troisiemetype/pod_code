@@ -101,9 +101,9 @@ bool menu_init(){
 //	Serial.println("create songs");
 	menu_createMusicSongs(songs, currentNode);
 //	Serial.println("songs created");
-	Serial.println("create other lists");
+//	Serial.println("create other lists");
 	menu_createMusic(artists, albums, songs);
-	Serial.println("lists ok");
+//	Serial.println("lists ok");
 
 
 //	menu_createMusicAlbums(albums, songs);
@@ -139,7 +139,8 @@ bool menu_createMusicSongs(MenuList *list, XMLElement *currentNode){
 		song->setSet(menu_getXMLNumberField(currentNode, "set"));
 		song->setYear(menu_getXMLNumberField(currentNode, "year"));
 //		Serial.printf("song %s\t", song->getName());
-		songEntry->attachCallback(menu_cbSong, song);
+//		songEntry->attachCallback(menu_cbSong, songEntry);
+		songEntry->attachCallback(menu_cbSong, reinterpret_cast<void*>(songEntry));
 //		Serial.printf("callback\t");
 		songEntry->attachData(reinterpret_cast<void*>(song));
 //		Serial.printf("data\t");
@@ -201,11 +202,12 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 				MenuItem *newItem = new MenuItem();
 				newItem->attachData(song);
 				newItem->attachName(song->getName());
+				newItem->attachCallback(menu_cbSong, reinterpret_cast<void*>(newItem));
 				listAlbums->addChild(newItem);
 				// TODO: try copy constructor
-				newItem = new MenuItem();
-				newItem->attachData(song);
-				newItem->attachName(song->getName());
+				newItem = new MenuItem(*newItem);
+//				newItem->attachData(song);
+//				newItem->attachName(song->getName());
 				listArtistsAlbums->addChild(newItem);
 
 				lastItem = item;
@@ -385,7 +387,10 @@ void menu_cbList(void* list){
 // The callback function to be attached to MenuItem objects, when selecting them.
 void menu_cbSong(void *data){
 //	tft.print("song called");
-	audio_playTrack((AudioTrackData*)data);
+	MenuItem *item = reinterpret_cast<MenuItem*>(data);
+	AudioTrackData *d = reinterpret_cast<AudioTrackData*>(item->getData());
+
+	audio_playTrack(d, item);
 }
 
 void menu_cbPlayer(void *data){
@@ -404,89 +409,3 @@ int16_t menu_getXMLNumberField(XMLElement *node, const char *field){
 //	value = node->IntAttribute(field);
 	return value;
 }
-
-// class MenuSong : public MenuItem
-// public
-MenuSong::MenuSong(){
-	_filename = NULL;
-	_artist = NULL;
-	_album = NULL;
-}
-
-MenuSong::~MenuSong(){
-	free(_name);
-	free(_filename);
-	free(_artist);
-	free(_album);
-}
-
-
-void MenuSong::setFilename(const char *name){
-	allocateChar(name, &_filename);
-}
-
-const char* MenuSong::getFilename(){
-	return _filename;
-}
-
-void MenuSong::setArtist(const char *name){
-	allocateChar(name, &_artist);
-}
-
-const char* MenuSong::getArtist(){
-	return _artist;
-}
-
-void MenuSong::setAlbum(const char *name){
-	allocateChar(name, &_album);
-}
-
-const char* MenuSong::getAlbum(){
-	return _album;
-}
-
-void MenuSong::setYear(uint16_t year){
-	_year = year;
-}
-
-uint16_t MenuSong::getYear(){
-	return _year;
-}
-
-void MenuSong::setTrack(uint8_t track){
-	_track = track;
-}
-
-uint8_t MenuSong::getTrack(){
-	return _track;
-}
-
-void MenuSong::setSet(uint8_t set){
-	_set = set;
-}
-
-uint8_t MenuSong::getSet(){
-	return _set;
-}
-
-void MenuSong::setCompilation(bool compilation){
-	_compilation = compilation;
-}
-
-bool MenuSong::getCompilation(){
-	return _compilation;
-}
-
-void MenuSong::setPop(uint8_t rank){
-	_rank = rank;
-}
-
-uint8_t MenuSong::getPop(){
-	return _rank;
-}
-
-/*
-void MenuSong::exec(){
-
-}
-*/

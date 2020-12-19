@@ -152,7 +152,7 @@ void data_parseFolder(fs::File *folder, uint8_t lvl){
 }
 
 bool data_checkDir(fs::File *dir){
-	const char *name = dir->name();
+//	const char *name = dir->name();
 	dirNode = dirData->RootElement()->FirstChildElement();
 	for(;;){
 		if(!dirNode){

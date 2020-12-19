@@ -11,6 +11,7 @@ const uint8_t I2S_DATA = 21;
 const uint8_t I2S_WS = 22;
 
 AudioTrackData *current = NULL;
+MenuItem *currentItem = NULL;
 
 bool playing = false;
 
@@ -54,8 +55,9 @@ void audio_int(){
 	if(playing) audioCounter++;
 }
 
-void audio_playTrack(AudioTrackData *track){
+void audio_playTrack(AudioTrackData *track, MenuItem *item){
 	// set track infos
+	currentItem = item;
 	if(current != track){
 		current = track;
 
@@ -93,11 +95,25 @@ void audio_updateDisplay(){
 }
 
 void audio_nextTrack(){
+	MenuItem *item = currentItem->getNext();
+	if(!item) return;
 
+	AudioTrackData *newTrack = reinterpret_cast<AudioTrackData*>(item->getData());
+	audio_playTrack(newTrack, item);
 }
 
 void audio_prevTrack(){
+	MenuItem *item = currentItem->getPrevious();
+	AudioTrackData *newTrack = current;
+	if((audioCounter / 1000) >= 1){
+		current = NULL;
+		item = currentItem;
+	} else {
+		if(!item) return;
 
+		newTrack = reinterpret_cast<AudioTrackData*>(item->getData());
+	}
+	audio_playTrack(newTrack, item);
 }
 
 void audio_pause(){
