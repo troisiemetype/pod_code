@@ -19,6 +19,8 @@ void audio_int();
 
 void audio_playTrack(MenuSong *track);
 
+void audio_updateDisplay();
+
 void audio_nextTrack();
 void audio_prevTrack();
 void audio_pause();

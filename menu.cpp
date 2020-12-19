@@ -31,6 +31,7 @@ bool menu_init(){
 	menu->attachCallback(menu_cbList, NULL);
 
 	MenuItem *i = new MenuItem();
+	i->attachCallback(menu_cbPlayer, NULL);
 	i->setName("playing");
 	menu->addChild(i);
 
@@ -338,6 +339,10 @@ void menu_cbList(void* list){
 void menu_cbSong(void *data){
 //	tft.print("song called");
 	audio_playTrack((MenuSong*)data);
+}
+
+void menu_cbPlayer(void *data){
+	audio_updateDisplay();
 }
 
 const char* menu_getXMLTextField(XMLElement *node, const char *field){

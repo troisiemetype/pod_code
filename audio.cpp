@@ -55,12 +55,6 @@ void audio_int(){
 }
 
 void audio_playTrack(MenuSong *track){
-	// Attach buttons callbacks
-	io_deattachAllCB();
-	io_attachCBRight(audio_nextTrack);
-	io_attachCBLeft(audio_prevTrack);
-	io_attachCBDown(audio_pause);
-	io_attachCBUp(menu_update);
 	// set track infos
 	if(current != track){
 		current = track;
@@ -77,16 +71,25 @@ void audio_playTrack(MenuSong *track){
 		timerAlarmEnable(audioTimer);
 	}
 
-	// Display track infos
+	audio_updateDisplay();
+
+}
+
+void audio_updateDisplay(){
+	if(!current) return;
+
+	// Attach buttons callbacks
+	io_deattachAllCB();
+	io_attachCBRight(audio_nextTrack);
+	io_attachCBLeft(audio_prevTrack);
+	io_attachCBDown(audio_pause);
+	io_attachCBUp(menu_update);
+
 	display_setState(PLAYER);
 	display_pushHeader("playing");
 	display_pushClearDisplay();
 	display_pushPlayer(current->getArtist(), current->getAlbum(), current->getName(), current->getTrack());
-	display_pushPlayerProgress(audioCounter / 1000, 134);
-	// Play track
-	// Update time every seconds
-	// 
-
+	display_pushPlayerProgress(audioCounter / 1000, 134);	
 }
 
 void audio_nextTrack(){

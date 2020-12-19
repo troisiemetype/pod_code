@@ -257,7 +257,7 @@ void data_getFileTags(void *cbData, const char *type, bool isUnicode, const char
 }
 
 theme_t* data_getTheme(theme_t *theme){
-
+	return NULL;
 }
 
 void data_updateTheme(const char *name){
