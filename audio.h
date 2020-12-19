@@ -12,6 +12,8 @@
 #include "AudioGeneratorMP3.h"
 #include "AudioOutputI2S.h"
 
+#define AUDIO_BUFFER_SIZE				29192
+
 void audio_init();
 
 bool audio_update();

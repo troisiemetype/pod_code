@@ -196,7 +196,7 @@ void data_checkSong(fs::File *file){
 
 	currentNode = songData->RootElement();
 	log_d("getting tag");
-	if(!audio_getTag(file)){
+	if(audio_getTag(file)){
 		totalSize += file->size();
 		currentNode = currentNode->InsertNewChildElement("song");
 		currentNode->InsertNewChildElement("id")->SetText(fileID++);
@@ -250,6 +250,7 @@ void data_getFileTags(void *cbData, const char *type, bool isUnicode, const char
 		currentNode->FirstChildElement("compilation")->InsertNewText(string);
 	} else if(type == (const char*)"eof"){
 		((AudioFileSourceFS*)cbData)->close();
+//		((AudioGenerator*)cbData)->stop();
 //		player->stop();
 		currentNode = (XMLElement*)currentNode->Parent();
 		return;

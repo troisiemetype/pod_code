@@ -6,6 +6,8 @@ AudioFileSourceFS *audioFile;
 AudioGenerator *player;
 AudioOutputI2S *audioOutput;
 
+//int8_t audioBuffer[AUDIO_BUFFER_SIZE];
+
 const uint8_t I2S_CLK = 16;
 const uint8_t I2S_DATA = 21;
 const uint8_t I2S_WS = 22;
@@ -30,6 +32,7 @@ void audio_init(){
 	audioOutput->SetPinout(I2S_CLK, I2S_WS, I2S_DATA);
 	audioFile = new AudioFileSourceFS(SD_MMC);
 	audioTags = new AudioFileSourceID3(audioFile);
+//	player = new AudioGeneratorMP3(audioBuffer, AUDIO_BUFFER_SIZE);
 	player = new AudioGeneratorMP3();
 
 	audioTimer = timerBegin(0, 80, true);
@@ -61,16 +64,20 @@ void audio_playTrack(AudioTrackData *track, MenuItem *item){
 	if(current != track){
 		current = track;
 
+		playing = 0;
 		audioFile->close();
 		audioFile->open(current->getFilename());
 		// todo : stopping and changing file make the player reboot.
 //		player->stop();
 //		player = new AudioGeneratorMP3();
 		*audioTags = AudioFileSourceID3(audioFile, true);
-		player->begin(audioTags, audioOutput);
-		playing = true;
-		audioCounter = 0;
-		timerAlarmEnable(audioTimer);
+		playing = player->begin(audioTags, audioOutput);
+		Serial.printf("playing %s : %i\n", current->getName(), playing);
+		log_d("Free heap: %d", ESP.getFreeHeap());
+		if(playing){
+			audioCounter = 0;
+			timerAlarmEnable(audioTimer);
+		}
 	}
 
 	audio_updateDisplay();
@@ -99,9 +106,11 @@ void audio_nextTrack(){
 	if(!item) return;
 
 	AudioTrackData *newTrack = reinterpret_cast<AudioTrackData*>(item->getData());
+	playing = false;
 	audio_playTrack(newTrack, item);
 }
 
+// TODO : make the player call the menu from which the song was taken, when reaching first.
 void audio_prevTrack(){
 	MenuItem *item = currentItem->getPrevious();
 	AudioTrackData *newTrack = current;
@@ -113,6 +122,7 @@ void audio_prevTrack(){
 
 		newTrack = reinterpret_cast<AudioTrackData*>(item->getData());
 	}
+	playing = false;
 	audio_playTrack(newTrack, item);
 }
 
@@ -142,7 +152,7 @@ bool audio_getTag(fs::File* file){
 	String name = file->name();
 	if(!(name.endsWith(".mp3"))){
 	audioLogger->println("unsupported file");
-		return 1;
+		return 0;
 	}
 	audioFile->open(file->name());
 	/*	if(audioTags == NULL){
@@ -153,8 +163,10 @@ bool audio_getTag(fs::File* file){
 	*/
 	*audioTags = AudioFileSourceID3(audioFile);
 	audioTags->RegisterMetadataCB(data_getFileTags, (void*)audioFile);
-	player->begin(audioTags, audioOutput);
-	return 0;
+	log_d("beginning player ; Free heap: %d", ESP.getFreeHeap());
+	bool ret = player->begin(audioTags, audioOutput);
+	log_d("player beginned ;  Free heap: %d", ESP.getFreeHeap());
+	return ret;
 
 //	audioFile->close();
 }

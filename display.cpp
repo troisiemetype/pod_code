@@ -399,7 +399,7 @@ void _display_updatePlayerVolume(void *data){
 
 void _display_updateTime(void *data){
 	timeData_t *bf = reinterpret_cast<timeData_t*>(data);
-
+	sprPtr = reinterpret_cast<uint16_t*>(timeSprite.getPointer());
 	uint8_t minutes = bf->current / 60;
 	uint8_t seconds = bf->current % 60;
 
@@ -421,8 +421,7 @@ void _display_updateTime(void *data){
 	timeSprite.drawString(":", 25, 11);
 	timeSprite.setTextDatum(ML_DATUM);
 	timeSprite.drawString(secs, 28, 11);
-	timeSprite.pushSprite(bf->x, bf->y);
-
+	tft.pushImageDMA(bf->x, bf->y, DISPLAY_TIME_WIDTH, DISPLAY_TIME_HEIGHT, sprPtr);
 }
 
 void _display_updateVuMeter(void *data){
