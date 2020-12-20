@@ -11,17 +11,17 @@ AudioOutputI2S *audioOutput;
 const uint8_t I2S_CLK = 16;
 const uint8_t I2S_DATA = 21;
 const uint8_t I2S_WS = 22;
-/*
+
 enum audioState_t{
-	IDLE = 0,
-	PARSING_TAGS,
-	PLAY,
-	PAUSING,
-	PAUSE,
-	UNPAUSING,
-	STOPPING,
-} audioState;
-*/
+	AUDIO_IDLE = 0,
+	AUDIO_PARSING_TAGS,
+	AUDIO_PLAY,
+	AUDIO_MUTING,
+	AUDIO_MUTE,
+	AUDIO_UNMUTING,
+	AUDIO_STOPPING,
+} audioState = AUDIO_IDLE;
+
 AudioTrackData *current = NULL;
 MenuItem *currentItem = NULL;
 
@@ -36,7 +36,10 @@ hw_timer_t *audioTimer = NULL;
 // player->loop() takes around 650us to run. On begin it's 11650us, and can take 2500us from time to time
 
 volatile uint32_t audioCounter = 0;
-uint16_t prevAudioCounter = 0;
+volatile bool audioCounterFlag = false;
+float audioGain = 1.0;
+const float MAX_AUDIO_GAIN = 1.0;
+uint8_t muteDelay = 20;						// The time wanted for mute / unmute, in milliseconds
 
 void audio_init(){
 	audioOutput = new AudioOutputI2S();
@@ -48,7 +51,7 @@ void audio_init(){
 
 	audioUpdateMutex = xSemaphoreCreateMutex();
 
-//	audioState = IDLE;
+	audioState = AUDIO_IDLE;
 
 	audioTimer = timerBegin(0, 80, true);
 	timerAttachInterrupt(audioTimer, &audio_int, true);
@@ -58,25 +61,37 @@ void audio_init(){
 }
 
 bool audio_update(){
-	if(!playing) return false;
-	xSemaphoreTake(audioUpdateMutex, portMAX_DELAY);
-	bool running = player->loop();
-	xSemaphoreGive(audioUpdateMutex);
-	uint16_t counter = audioCounter / 1000;
-	if(counter != prevAudioCounter){
-		prevAudioCounter = counter;
-		display_pushPlayerProgress(counter, 300);
+//	if(!playing) return false;
+	if(audioState == AUDIO_PLAY || audioState == AUDIO_MUTING || audioState == AUDIO_UNMUTING){
+		xSemaphoreTake(audioUpdateMutex, portMAX_DELAY);
+		bool running = player->loop();
+		xSemaphoreGive(audioUpdateMutex);
+
+		if(audioCounterFlag){
+			audioCounterFlag = false;
+			display_pushPlayerProgress(audioCounter / 1000, 300);
+			if(audioState == AUDIO_MUTING){
+				audio_mute();
+			} else if(audioState == AUDIO_UNMUTING){
+				audio_unmute();
+			}
+		}
+
+		if(!running){
+			audio_nextTrack();
+		}
+
+		return running;
 	}
 
-	if(!running){
-		audio_nextTrack();
-	}
-
-	return running;
+	return false;
 }
 
 void audio_int(){
-	if(playing) audioCounter++;
+	if(audioState == AUDIO_PLAY || audioState == AUDIO_MUTING || audioState == AUDIO_UNMUTING){
+		audioCounter++;
+		audioCounterFlag = true;
+	}
 }
 
 void audio_playTrack(AudioTrackData *track, MenuItem *item){
@@ -97,6 +112,7 @@ void audio_playTrack(AudioTrackData *track, MenuItem *item){
 		Serial.printf("playing %s : %i\n", current->getName(), playing);
 		log_d("Free heap: %d", ESP.getFreeHeap());
 		if(playing){
+			audioState = AUDIO_PLAY;
 			audioCounter = 0;
 			timerAlarmEnable(audioTimer);
 		}
@@ -109,6 +125,7 @@ void audio_playTrack(AudioTrackData *track, MenuItem *item){
 void audio_stop(){
 	if(!playing) return;
 	xSemaphoreTake(audioUpdateMutex, portMAX_DELAY);
+	audioState = AUDIO_IDLE;
 	playing = 0;
 	player->stop();
 	audioFile->close();
@@ -159,25 +176,37 @@ void audio_prevTrack(){
 }
 
 void audio_pause(){
-	if(playing){
-		playing = false;
+	if(audioState == AUDIO_PLAY){
+		audioState = AUDIO_MUTING;
+//		playing = false;
 //		audioOutput->SetGain(0);
 //		timerAlarmDisable(audioTimer);
-		audioOutput->stop();
+//		audioOutput->stop();
 	} else {
-		playing = true;
+		audioState = AUDIO_UNMUTING;
+//		playing = true;
 //		audioOutput->SetGain(1);
-		audioOutput->begin();
+//		audioOutput->begin();
 //		timerAlarmEnable(audioTimer);
 	}
 }
 
 void audio_mute(){
-
+	audioGain -= (MAX_AUDIO_GAIN / muteDelay);
+	audioOutput->SetGain(audioGain);
+	if(audioGain <= 0){
+		audioState = AUDIO_MUTE;
+		audioOutput->stop();
+	}
 }
 
 void audio_unmute(){
-
+	audioGain += (MAX_AUDIO_GAIN / muteDelay);
+	audioOutput->SetGain(audioGain);
+	if(audioGain >= 1.0){
+		audioState = AUDIO_PLAY;
+		audioOutput->stop();
+	}
 }
 
 bool audio_getTag(fs::File* file){
@@ -198,6 +227,11 @@ bool audio_getTag(fs::File* file){
 	log_d("beginning player ; Free heap: %d", ESP.getFreeHeap());
 	playing = player->begin(audioTags, audioOutput);
 	log_d("player beginned ;  Free heap: %d", ESP.getFreeHeap());
+	if(playing){
+		audioState = AUDIO_PARSING_TAGS;
+	} else {
+		audioState = AUDIO_IDLE;
+	}
 	return playing;
 
 //	audioFile->close();
