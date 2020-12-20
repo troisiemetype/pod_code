@@ -17,8 +17,9 @@ void setup(){
 
 	log_d("Total heap: %d", ESP.getHeapSize());
 	log_d("Free heap: %d", ESP.getFreeHeap());
-	log_d("Total PSRAM: %d", ESP.getPsramSize());
-	log_d("Free PSRAM: %d", ESP.getFreePsram());
+	// no PSRAM on ESP32-WROOM !
+//	log_d("Total PSRAM: %d", ESP.getPsramSize());
+//	log_d("Free PSRAM: %d", ESP.getFreePsram());
 
 	io_init();
 	display_init();
@@ -37,25 +38,26 @@ void setup(){
 		return;
 	}
 
-	log_d("Total heap: %d", ESP.getHeapSize());
-	log_d("Free heap: %d", ESP.getFreeHeap());
+	// First need to create the song node of the menu, in which data will push every song in database.
+	menu_init();
+
+	// We then need to init audio, because data parser will need the tag parsing for creating new database entry.
 	audio_init();
+
+	// Parse database for listed, new and removed songs.
 	data_init();
-//	log_d("data init");
-	if(menu_init()){
-		sandbox();
-	}
+
 	log_d("Total heap: %d", ESP.getHeapSize());
 	log_d("Free heap: %d", ESP.getFreeHeap());
 
-	data_empty();
+	// Then create the menu
+	menu_makeMenu();
 
 	log_d("Total heap: %d", ESP.getHeapSize());
 	log_d("Free heap: %d", ESP.getFreeHeap());
 
 //	xTaskCreatePinnedToCore(audioLoop, "audioLoop", 10000, NULL, 1, NULL, 0);
 	xTaskCreate(audioLoop, "audioLoop", 10000, NULL, 1, NULL);
-
 }
 
 void loop(){

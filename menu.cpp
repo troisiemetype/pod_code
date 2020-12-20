@@ -5,6 +5,8 @@ using namespace tinyxml2;
 
 MenuList *menu;
 
+MenuList *songs;
+
 uint8_t maxMenuItem;
 
 float testValue = 0.5;
@@ -18,8 +20,38 @@ float testValue = 0.5;
 // 100 empty MenuSong = 4000 bytes
 // MenuSong *songs = (MenuSong*)ps_malloc(100);
 
+// Start for menu. Create the basic song menu, in which the databasee parser will push every new song.
+void menu_init(){
+	songs = new MenuList();
+	songs->attachCallback(menu_cbList, NULL);
+	songs->setName("songs");
+}
+
+void menu_pushSong(AudioTrackData *song){
+//	Serial.printf("push to menu : %s\n", song->getName());
+	MenuItem *songEntry = new MenuItem();
+
+	songEntry->attachCallback(menu_cbSong, reinterpret_cast<void*>(songEntry));
+	songEntry->attachData(reinterpret_cast<void*>(song));
+	songEntry->attachName(song->getName());
+	songs->addChild(songEntry);
+
+}
+
+bool menu_hasSong(const char *filename){
+	MenuItem *item = songs->getFirst();
+	for(;;){
+		if(!item) break;
+
+		AudioTrackData *song = reinterpret_cast<AudioTrackData*>(item->getData());
+		if(strcmp(filename, song->getFilename()) == 0) return true;
+		item = songs->getNext();
+	}
+	return false;
+}
+
 // Create main menu, call subroutines to parse levels.
-bool menu_init(){
+void menu_makeMenu(){
 //	tft.println("creating menu");
 
 	maxMenuItem = display_getMaxMenuItem();
@@ -50,9 +82,6 @@ bool menu_init(){
 	albums->setName("albums");
 	music->addChild(albums);
 
-	MenuList *songs = new MenuList();
-	songs->attachCallback(menu_cbList, NULL);
-	songs->setName("songs");
 	music->addChild(songs);
 
 	MenuList *compilations = new MenuList();
@@ -71,10 +100,6 @@ bool menu_init(){
 	settings->setName("settings");
 	menu->addChild(settings);
 
-	MenuItem *test = new MenuItem();
-	test->attachCallback(menu_cbTest, NULL);
-	test->setName("test");
-	menu->addChild(test);
 
 	MenuList *brightness = new MenuList();
 	brightness->setName("brightness");
@@ -96,68 +121,20 @@ bool menu_init(){
 	equalizer->setName("equalizer");
 	settings->addChild(equalizer);
 
-	XMLElement *currentNode = data_getSongList();
 
-//	Serial.println("create songs");
-	menu_createMusicSongs(songs, currentNode);
-//	Serial.println("songs created");
-//	Serial.println("create other lists");
+	MenuItem *test = new MenuItem();
+	test->attachCallback(menu_cbTest, NULL);
+	test->setName("test");
+	menu->addChild(test);
+
 	menu_createMusic(artists, albums, songs);
-//	Serial.println("lists ok");
 
-
-//	menu_createMusicAlbums(albums, songs);
-//	menu_createMusicArtists(artists, songs);
-
-	songs->sort();
-/*
-	tft.printf("size of MenuItem : %i\n", sizeof(*i));
-	tft.printf("size of MenuList : %i\n", sizeof(*menu));
-	delay(3000);
-*/
-
-//	return 1;
-//	menu_write(menu);
 	menu_cbList(menu);
-	return 0;
 
-}
-
-// Create the music/song menu, that will be the base for the other ones.
-bool menu_createMusicSongs(MenuList *list, XMLElement *currentNode){
-//	tft.println("parsing songs database");
-	AudioTrackData *song;
-	MenuItem *songEntry;
-	for(;;){
-		songEntry = new MenuItem();
-		song = new AudioTrackData();
-		song->setFilename(menu_getXMLTextField(currentNode, "filename"));
-		song->setName(menu_getXMLTextField(currentNode, "name"));
-		song->setArtist(menu_getXMLTextField(currentNode, "artist"));
-		song->setAlbum(menu_getXMLTextField(currentNode, "album"));
-		song->setTrack(menu_getXMLNumberField(currentNode, "track"));
-		song->setSet(menu_getXMLNumberField(currentNode, "set"));
-		song->setYear(menu_getXMLNumberField(currentNode, "year"));
-//		Serial.printf("song %s\t", song->getName());
-//		songEntry->attachCallback(menu_cbSong, songEntry);
-		songEntry->attachCallback(menu_cbSong, reinterpret_cast<void*>(songEntry));
-//		Serial.printf("callback\t");
-		songEntry->attachData(reinterpret_cast<void*>(song));
-//		Serial.printf("data\t");
-		songEntry->attachName(song->getName());
-//		Serial.printf("name\t");
-		list->addChild(songEntry);
-//		Serial.printf("ok\n");
-
-		currentNode = currentNode->NextSiblingElement();
-		if(currentNode == NULL) break;
-	}
-
-	list->sort();
-	return 0;
 }
 
 bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
+	ref->sort();
 	ref->sortExternal(menu_sortByTrack);
 	ref->sortExternal(menu_sortByAlbum);
 	ref->sortExternal(menu_sortByArtist);

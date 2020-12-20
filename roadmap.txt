@@ -1,0 +1,41 @@
+Make a dynamic menu system
+
+	done, but needs to change the basic node. 		ok
+
+See if there is no memory leak in MenuIem, MenuList and AudioTrackData, with malloc / free for const char* members.
+
+Listing files on drive								ok
+
+Checking existing files against database.
+	checking listed files still exist 				ok
+	checking for new files 							wop // ok, but needs a way to do it without parsing the whole filesystem !
+	Breaking the XML database into smaller chunks 	ok // each AudioTrackData object is saved as raw bytes to SD card.	
+
+Create a player GUI									wop // lacks album art.
+
+See how to make updates automatic. 					wop : use last write time on folders, but it's not recursive
+
+Implementing touch wheel
+	done, but needs tweaking as it's pretty instable for now.
+
+make the player play songs
+	start playing.									ok
+	Next / previous song.							ok
+	Auto next song on song end 						ok
+	display informations							ok, except album covers.
+	compute file duration
+	add soft mute/unmute / pause/unpause			ok
+
+audio buffer is not fed enough when navigating menus !
+	use an interrupt to populate audio buffer.		/
+	Audio update has been switched to a task.		ok
+	use DMA for TFT SPI updates. 					ok
+	use a display queue buffer for updating. 		ok
+
+//////////////////////////////////
+
+I18n options : create a langage file (xml ?) for translations.
+
+Play something else than mp3.
+
+Give the possibility to change the color scheme.	wop / branch color. Already created a struct in display.

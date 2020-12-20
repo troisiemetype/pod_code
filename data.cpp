@@ -3,18 +3,15 @@
 
 extern 	AudioGenerator *player;
 
-const char* songDatabase = "/system/data/songs.xml";
-const char* dirDatabase = "/system/data/dir.xml";
-const char* themeDatabase = "/system/data/theme.xml";
+const char *musicDir = "/music";
+const char *dataDir = "/system/data";
+const char *dbDir = "/system/data/DB";
+char dbFilename[22];
 
-using namespace tinyxml2;
+AudioTrackData *track = NULL;
+char dbName[] = "0000";
+uint16_t dbNameValue = 0;
 
-XMLDocument *songData = NULL;
-XMLDocument *dirData = NULL;
-XMLDocument *themeData = NULL;
-XMLElement *currentNode = NULL;
-XMLElement *dirNode = NULL;
-XMLElement *themeNode = NULL;
 
 uint32_t fileID = 0;
 
@@ -54,115 +51,39 @@ bool tagEOF = false;
  */
 
 void data_init(){
-	if(!SD_MMC.exists("/music")) SD_MMC.mkdir("/music");
+	if(!SD_MMC.exists(musicDir)) SD_MMC.mkdir(musicDir);
+	if(!SD_MMC.exists(dbDir)) SD_MMC.mkdir(dbDir);
 
-	songData = new XMLDocument();
-	if(songData->LoadFile(songDatabase)){
-		currentNode = songData->NewElement("songs");
-		currentNode = (XMLElement*)songData->InsertFirstChild(currentNode);
-	}
+	fs::File database = SD_MMC.open(dbDir);
+	data_readDatabase(&database);
 
-	dirData = new XMLDocument();
-	if(dirData->LoadFile(dirDatabase)){
-		dirNode = dirData->NewElement("directories");
-		dirNode = (XMLElement*)dirData->InsertFirstChild(dirNode);
-	}
-
-	themeData = new XMLDocument();
-	if(themeData->LoadFile(themeDatabase)){
-		themeNode = themeData->NewElement("themes");
-		themeNode = (XMLElement*)themeData->InsertFirstChild(themeNode);
-	}
-
-
-
-//	Serial.println("listing files.");
 	data_checkNewFiles();
-//	data_checkDeletedFiles();
-//	data_checkNewFiles();
-
-//	delete songData;
 }
 
-void data_empty(){
-	currentNode = NULL;
-	dirNode = NULL;
-	themeNode = NULL;
-	delete songData;
-	delete dirData;
-	delete themeData;
-}
+void data_readDatabase(fs::File *dir){
+	for(;;){
+		fs::File file = dir->openNextFile();
+		if(!file) break;
 
-// List file from SD card, then save them to a raw XML containing metadata.
-// This file will serve as a data base.
-bool data_checkNewFiles(){
-	currentNode = songData->RootElement();
-	dirNode = dirData->RootElement();
-
-//	Serial.println("Listing songs");
-	fileID = 0;
-	fs::File music = SD_MMC.open("/music");
-	// modified :
-	// 1606519370
-	// 1606519370
-	// After adding some data : 
-	// 1606567148
-	// After suppressing a file in a sub folder
-	// 1606567148
-//	uint32_t size = SD_MMC.totalBytes() / (1024 * 1024);
-//	Serial.printf("available : %i\n", size);
-//	Serial.printf("music modified on : %i\n", (int32_t)music.getLastWrite());
-	counter = millis();
-	if(data_checkDir(&music)){
-
-	}
-	data_parseFolder(&music);
-	music.close();
-//	uint32_t time = millis() - counter;
-//	Serial.printf("%i files listed in %i milliseconds.\n", fileID, time);
-
-//	tft.println("Saving songs listing");
-	songData->SaveFile(songDatabase);
-	dirData->SaveFile(dirDatabase);
-
-	return 0;
-}
-
-bool data_checkDeletedFiles(){
-	currentNode = songData->RootElement()->FirstChildElement();
-	fileID = 0;
-
-	XMLNode *nodeToClear = NULL;
-
-//	Serial.printf("\nchecking for removed songs\n");
-	counter = millis();
-	for (;;){
-		if(currentNode == NULL) break;
-		const char *name = currentNode->FirstChildElement("filename")->GetText();
-//		const char *name = menu_getXMLTextField(currentNode, "name");
-		// Check if file exists
-		if(SD_MMC.exists(name)){
-			// Add its size to the total size, and increment the files counter.
-			// Maybe the total size can just be checked from the SD_MMC object.
-//			fs::File file = SD_MMC.open(name);
-//			totalSize += file.size();
-			fileID++;
-//			file.close();
+		track = new AudioTrackData();
+		data_readAudioTrackData(&file, track);
+		// check if the file still exists in /music
+		if(SD_MMC.exists(track->getFilename())){
+			// if it exists, push it to menu.
+			menu_pushSong(track);
+			file.close();
 		} else {
-			// remove this file from the songDatabase.
-			nodeToClear = currentNode;
-//			Serial.printf("removed\t%s\n", name);
-		}
-		currentNode = currentNode->NextSiblingElement();
-		if(nodeToClear){
-			nodeToClear->Parent()->DeleteChild(nodeToClear);
-			nodeToClear = NULL;
+			// If it doesn't, we delete the entry in database, and the track info just created.
+			delete track;
+			file.close();
+			SD_MMC.remove(file.name());
 		}
 	}
-//	uint32_t time = millis() - counter;
-//	Serial.printf("%i files listed in %i milliseconds.\n", fileID, time);
-	songData->SaveFile(songDatabase);
-	return 1;
+}
+
+void data_checkNewFiles(){
+	fs::File dir= SD_MMC.open(musicDir);
+	data_parseFolder(&dir, 0);
 }
 
 // Parse folder /music/, to recursively list every audio file on the SD card.
@@ -175,90 +96,116 @@ void data_parseFolder(fs::File *folder, uint8_t lvl){
 			break;
 		}
 		if(file.isDirectory()){
+			// Recursively dive into every folder we find.
 			data_parseFolder(&file, lvl);
 		} else {
+			// If the file is a song, we check it.
 			data_checkSong(&file);
+			file.close();
 		}
 	}
-}
-
-bool data_checkDir(fs::File *dir){
-//	const char *name = dir->name();
-	dirNode = dirData->RootElement()->FirstChildElement();
-	for(;;){
-		if(!dirNode){
-//			Serial.println("no dir data");
-			break;
-		}
-		if(strcmp(dir->name(), dirNode->FirstChildElement()->GetText()) == 0){
-			int32_t value = 0;
-			dirNode->FirstChildElement("time")->QueryIntText(&value);
-			if(dir->getLastWrite() == value){
-//				Serial.printf("%s found.\n", name);
-				return 0;
-			}
-		}
-		dirNode = dirNode->NextSiblingElement();
-	}
-
-	dirNode = dirData->RootElement();
-	dirNode = dirNode->InsertNewChildElement("dir");
-	dirNode->InsertNewChildElement("name")->SetText(dir->name());
-	dirNode->InsertNewChildElement("time")->SetText((int32_t)(dir->getLastWrite()));
-
-//	Serial.printf("%s created.\n", name);
-	return 1;
 }
 
 void data_checkSong(fs::File *file){
+	// Get filename, then extract extension to check for file validity
+	// We only (for now i hope) want to deal with mp3 files.
 	const char *name = file->name();
+	const char *ext = strrchr(name, '.');
 
-	currentNode = songData->RootElement()->FirstChildElement();
+//	Serial.printf("file %s ; extension %s\n", name, ext);
+	if(strcmp(ext, ".mp3") != 0) return;
 
-	for(;;){
-		if(!currentNode) break;
-		if(strcmp(currentNode->FirstChildElement("filename")->GetText(), name) == 0){
-//			Serial.printf("checked\t%s\n", name);
-			fileID++;
-			return;
-		}
-		currentNode = currentNode->NextSiblingElement();
-	}
+	// We check if menu has already this song (which has already been loaded from database)
+	if(menu_hasSong(name)) return;
 
-	currentNode = songData->RootElement();
-	log_d("getting tag");
+//	log_d("getting tag");
+//	Serial.printf("getting tags for  %s\n", name);
 	if(audio_getTag(file)){
 		tagEOF = false;
 		totalSize += file->size();
-		currentNode = currentNode->InsertNewChildElement("song");
-		currentNode->InsertNewChildElement("id")->SetText(fileID++);
-		currentNode->InsertNewChildElement("name");
-		currentNode->InsertNewChildElement("filename")->InsertNewText(file->name());
-		currentNode->InsertNewChildElement("album");
-		currentNode->InsertNewChildElement("artist");
-		currentNode->InsertNewChildElement("track");
-		currentNode->InsertNewChildElement("set");
-		currentNode->InsertNewChildElement("year");
-		currentNode->InsertNewChildElement("compilation");
-		currentNode->InsertNewChildElement("popmeter");
-		currentNode->InsertNewChildElement("duration");
-		currentNode->InsertNewChildElement("size")->SetText(file->size());
+
+		track = new AudioTrackData();
+		track->setFilename(name);
 
 		while(!tagEOF){
 			player->loop();
 		}
 		player->stop();
+		data_writeAudioTrackData(track);
+		menu_pushSong(track);
+//		Serial.println("song added to menu and in database.");
 //		Serial.printf("added\t%s\n", name);
 	}
 
 }
 
+void data_readAudioTrackData(fs::File *file, AudioTrackData *track){
+//	Serial.printf("read data from %s\n", file->name());
+	// make a clone copy of the file, byte fo byte, to the AudioTrackData instance.
+	file->read((uint8_t*)track, sizeof(AudioTrackData) / sizeof(uint8_t));
 
-XMLElement* data_getSongList(){
-	if(songData->LoadFile(songDatabase)){
-		return NULL;
+	// then copy the values for name, artist, album and filename, that are appended at the end of the file.
+	// We have to expressly copy these values since they are pointer in the class instance.
+	char name[128];
+	char c;
+	uint8_t index = 0;
+	do{
+		c = file->read();
+		name[index++] = c;
+	}while(c);
+
+	track->setName(name);
+
+	index = 0;
+	do{
+		c = file->read();
+		name[index++] = c;
+	}while(c);
+
+	track->setArtist(name);
+
+	index = 0;
+	do{
+		c = file->read();
+		name[index++] = c;
+	}while(c);
+
+	track->setAlbum(name);
+
+	index = 0;
+	do{
+		c = file->read();
+		name[index++] = c;
+	}while(c);
+
+	track->setFilename(name);
+}
+
+void data_writeAudioTrackData(AudioTrackData *track){
+	// Check for existing name !
+	for(;;){
+		sprintf(dbName, "%04X", dbNameValue);
+		strcpy(dbFilename, dbDir);
+		strcat(dbFilename, "/");
+		strcat(dbFilename, dbName);
+		if(SD_MMC.exists(dbFilename)){
+			dbNameValue++;
+		} else {
+			break;
+		}
 	}
-	return songData->RootElement()->FirstChildElement();
+
+	fs::File file = SD_MMC.open(dbFilename, "w");
+	if(!file) return;
+
+	size_t b = 0;
+	b += file.write((uint8_t*)track, sizeof(AudioTrackData) / sizeof(uint8_t));
+	b += file.write((uint8_t*)track->getName(), strlen(track->getName()) + 1);
+	b += file.write((uint8_t*)track->getArtist(), strlen(track->getArtist()) + 1);
+	b += file.write((uint8_t*)track->getAlbum(), strlen(track->getAlbum()) + 1);
+	b += file.write((uint8_t*)track->getFilename(), strlen(track->getFilename()) + 1);
+
+//	Serial.printf("%i bytes written to file %s\n", b, dbName);
 }
 
 // Populate XML based on SD card content.
@@ -267,32 +214,28 @@ void data_getFileTags(void *cbData, const char *type, bool isUnicode, const char
 //	tft.print(type);tft.print(" : ");tft.println(string);
 	
 	if(type == (const char*)"Title"){
-		currentNode->FirstChildElement("name")->InsertNewText(string);
+		track->setName(string);
 	} else if(type == (const char*)"Album"){
-		currentNode->FirstChildElement("album")->InsertNewText(string);
+		track->setAlbum(string);
 	} else if(type == (const char*)"Performer"){
-		currentNode->FirstChildElement("artist")->InsertNewText(string);
+		track->setArtist(string);
 	} else if(type == (const char*)"Year"){
-		currentNode->FirstChildElement("year")->InsertNewText(string);
+		track->setYear(strtol(string, NULL, 10));
 	} else if(type == (const char*)"Track"){
-		currentNode->FirstChildElement("track")->InsertNewText(string);
+		track->setTrack(strtol(string, NULL, 10));
 	} else if(type == (const char*)"Set"){
-		currentNode->FirstChildElement("set")->InsertNewText(string);
+		track->setSet(strtol(string, NULL, 10));
 	} else if(type == (const char*)"Popularimeter"){
-		currentNode->FirstChildElement("popmeter")->InsertNewText(string);
+		track->setPop(strtol(string, NULL, 10));
 	} else if(type == (const char*)"Compilation"){
-		currentNode->FirstChildElement("compilation")->InsertNewText(string);
+		track->setCompilation(strtol(string, NULL, 10));
 	} else if(type == (const char*)"eof"){
 		tagEOF = true;
-//		audio_stop();
-//		((AudioFileSourceFS*)cbData)->close();
-//		((AudioGenerator*)cbData)->stop();
-//		player->stop();
-		currentNode = (XMLElement*)currentNode->Parent();
 		return;
 	}
 }
 
+/*
 theme_t* data_getTheme(theme_t *theme){
 	return NULL;
 }
@@ -300,3 +243,4 @@ theme_t* data_getTheme(theme_t *theme){
 void data_updateTheme(const char *name){
 
 }
+*/

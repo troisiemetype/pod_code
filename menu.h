@@ -7,8 +7,10 @@
 
 // #include "Menu.h"
 
-bool menu_init();
-bool menu_createMusicSongs(MenuList *list, tinyxml2::XMLElement *currentNode);
+void menu_init();
+void menu_pushSong(AudioTrackData *song);
+bool menu_hasSong(const char *filename);
+void menu_makeMenu();
 bool menu_createMusic(MenuList *list, MenuList *album, MenuList *ref);
 
 int16_t menu_sortByName(MenuItem *a, MenuItem *b);

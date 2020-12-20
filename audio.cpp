@@ -210,11 +210,7 @@ void audio_unmute(){
 }
 
 bool audio_getTag(fs::File* file){
-	String name = file->name();
-	if(!(name.endsWith(".mp3"))){
-	audioLogger->println("unsupported file");
-		return 0;
-	}
+
 	audioFile->open(file->name());
 	/*	if(audioTags == NULL){
 		audioTags = new AudioFileSourceID3(audioFile);
@@ -224,9 +220,9 @@ bool audio_getTag(fs::File* file){
 	*/
 	*audioTags = AudioFileSourceID3(audioFile);
 	audioTags->RegisterMetadataCB(data_getFileTags, (void*)audioFile);
-	log_d("beginning player ; Free heap: %d", ESP.getFreeHeap());
+//	log_d("beginning player ; Free heap: %d", ESP.getFreeHeap());
 	playing = player->begin(audioTags, audioOutput);
-	log_d("player beginned ;  Free heap: %d", ESP.getFreeHeap());
+//	log_d("player beginned ;  Free heap: %d", ESP.getFreeHeap());
 	if(playing){
 		audioState = AUDIO_PARSING_TAGS;
 	} else {

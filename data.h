@@ -6,20 +6,19 @@
 #include "esPod.h"
 
 void data_init();
-void data_empty();
 
-bool data_checkNewFiles();
-bool data_checkDeletedFiles();
-
+void data_readDatabase(fs::File *dir);
+void data_checkNewFiles();
 void data_parseFolder(fs::File *file, uint8_t lvl = 0);
-bool data_checkDir(fs::File *dir);
 void data_checkSong(fs::File *file);
 
-tinyxml2::XMLElement* data_getSongList();
+void data_readAudioTrackData(fs::File *file, AudioTrackData *track);
+void data_writeAudioTrackData(AudioTrackData *track);
 
 void data_getFileTags(void *cbData, const char *type, bool isUnicode, const char *string);
-
+/*
 theme_t* data_getTheme(theme_t *theme);
 void data_updateTheme(const char *name);
+*/
 
 #endif
