@@ -23,6 +23,36 @@ uint32_t totalSize = 0;
 
 bool tagEOF = false;
 
+/*
+ * TODO : xml files quickly take a tremendous amount of space on the heap, so the database system must be rewritten
+ *
+ *		First check every sub-folder fo music.
+ *			Compare the last modification date of folders against the one present in database.
+ *
+ *
+ * 			One main database, listing sub-databases.
+ * 			sub-database list files, up until it reaches a max size (lets say around 32)
+ *			We then need to has a main function that :
+ *				Open the database
+ *				Loop into the sub-databases
+ *					Open the sub-database
+ *					gather songs info for menu and player
+ * 					close the sub database.
+ *					check for new songs
+ * 					check for deleted songs
+ */
+
+/*
+ *	The solution to XML file size would maybe simply be to have a data file for every song file,
+ *	in which the AudioTrackData object is saved.
+ *		On startup, open the folder containing those object-files.
+ *		check if the file still exists.
+ *			Add it to the running data, or
+ *			erase it from the data.
+ *		Check for new files.
+ *			Create a new object-file if needed, add it to the running data.
+ */
+
 void data_init(){
 	if(!SD_MMC.exists("/music")) SD_MMC.mkdir("/music");
 
@@ -211,6 +241,7 @@ void data_checkSong(fs::File *file){
 		currentNode->InsertNewChildElement("year");
 		currentNode->InsertNewChildElement("compilation");
 		currentNode->InsertNewChildElement("popmeter");
+		currentNode->InsertNewChildElement("duration");
 		currentNode->InsertNewChildElement("size")->SetText(file->size());
 
 		while(!tagEOF){
