@@ -53,7 +53,8 @@ void setup(){
 	log_d("Total heap: %d", ESP.getHeapSize());
 	log_d("Free heap: %d", ESP.getFreeHeap());
 
-	xTaskCreatePinnedToCore(audioLoop, "audioLoop", 10000, NULL, 1, NULL, 0);
+//	xTaskCreatePinnedToCore(audioLoop, "audioLoop", 10000, NULL, 1, NULL, 0);
+	xTaskCreate(audioLoop, "audioLoop", 10000, NULL, 1, NULL);
 
 }
 
@@ -65,6 +66,7 @@ void loop(){
 
 void audioLoop(void *params){
 	for(;;){
+//		Serial.println("al");
 		audio_update();
 		vTaskDelay(1 / portTICK_PERIOD_MS);
 	}

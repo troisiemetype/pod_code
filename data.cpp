@@ -21,6 +21,7 @@ uint32_t fileID = 0;
 uint32_t counter = 0;
 uint32_t totalSize = 0;
 
+bool tagEOF = false;
 
 void data_init(){
 	if(!SD_MMC.exists("/music")) SD_MMC.mkdir("/music");
@@ -197,6 +198,7 @@ void data_checkSong(fs::File *file){
 	currentNode = songData->RootElement();
 	log_d("getting tag");
 	if(audio_getTag(file)){
+		tagEOF = false;
 		totalSize += file->size();
 		currentNode = currentNode->InsertNewChildElement("song");
 		currentNode->InsertNewChildElement("id")->SetText(fileID++);
@@ -211,9 +213,10 @@ void data_checkSong(fs::File *file){
 		currentNode->InsertNewChildElement("popmeter");
 		currentNode->InsertNewChildElement("size")->SetText(file->size());
 
-		while(player->isRunning()){
+		while(!tagEOF){
 			player->loop();
 		}
+		player->stop();
 //		Serial.printf("added\t%s\n", name);
 	}
 
@@ -249,7 +252,9 @@ void data_getFileTags(void *cbData, const char *type, bool isUnicode, const char
 	} else if(type == (const char*)"Compilation"){
 		currentNode->FirstChildElement("compilation")->InsertNewText(string);
 	} else if(type == (const char*)"eof"){
-		((AudioFileSourceFS*)cbData)->close();
+		tagEOF = true;
+//		audio_stop();
+//		((AudioFileSourceFS*)cbData)->close();
 //		((AudioGenerator*)cbData)->stop();
 //		player->stop();
 		currentNode = (XMLElement*)currentNode->Parent();

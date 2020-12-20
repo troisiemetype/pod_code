@@ -21,6 +21,8 @@ void audio_int();
 
 void audio_playTrack(AudioTrackData *track, MenuItem *item);
 
+void audio_stop();
+
 void audio_updateDisplay();
 
 void audio_nextTrack();

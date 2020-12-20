@@ -11,11 +11,22 @@ AudioOutputI2S *audioOutput;
 const uint8_t I2S_CLK = 16;
 const uint8_t I2S_DATA = 21;
 const uint8_t I2S_WS = 22;
-
+/*
+enum audioState_t{
+	IDLE = 0,
+	PARSING_TAGS,
+	PLAY,
+	PAUSING,
+	PAUSE,
+	UNPAUSING,
+	STOPPING,
+} audioState;
+*/
 AudioTrackData *current = NULL;
 MenuItem *currentItem = NULL;
 
 bool playing = false;
+SemaphoreHandle_t audioUpdateMutex;
 
 hw_timer_t *audioTimer = NULL;
 // portMUX_TYPE audioTimerMux= portMUX_INITIALIZER_UNLOCKED;
@@ -35,6 +46,10 @@ void audio_init(){
 //	player = new AudioGeneratorMP3(audioBuffer, AUDIO_BUFFER_SIZE);
 	player = new AudioGeneratorMP3();
 
+	audioUpdateMutex = xSemaphoreCreateMutex();
+
+//	audioState = IDLE;
+
 	audioTimer = timerBegin(0, 80, true);
 	timerAttachInterrupt(audioTimer, &audio_int, true);
 	timerAlarmWrite(audioTimer, 1000, true);
@@ -44,11 +59,17 @@ void audio_init(){
 
 bool audio_update(){
 	if(!playing) return false;
+	xSemaphoreTake(audioUpdateMutex, portMAX_DELAY);
 	bool running = player->loop();
+	xSemaphoreGive(audioUpdateMutex);
 	uint16_t counter = audioCounter / 1000;
 	if(counter != prevAudioCounter){
 		prevAudioCounter = counter;
 		display_pushPlayerProgress(counter, 300);
+	}
+
+	if(!running){
+		audio_nextTrack();
 	}
 
 	return running;
@@ -63,9 +84,10 @@ void audio_playTrack(AudioTrackData *track, MenuItem *item){
 	currentItem = item;
 	if(current != track){
 		current = track;
+		audio_stop();
 
-		playing = 0;
-		audioFile->close();
+//		playing = 0;
+//		audioFile->close();
 		audioFile->open(current->getFilename());
 		// todo : stopping and changing file make the player reboot.
 //		player->stop();
@@ -82,6 +104,15 @@ void audio_playTrack(AudioTrackData *track, MenuItem *item){
 
 	audio_updateDisplay();
 
+}
+
+void audio_stop(){
+	if(!playing) return;
+	xSemaphoreTake(audioUpdateMutex, portMAX_DELAY);
+	playing = 0;
+	player->stop();
+	audioFile->close();
+	xSemaphoreGive(audioUpdateMutex);
 }
 
 void audio_updateDisplay(){
@@ -106,7 +137,8 @@ void audio_nextTrack(){
 	if(!item) return;
 
 	AudioTrackData *newTrack = reinterpret_cast<AudioTrackData*>(item->getData());
-	playing = false;
+
+//	audio_stop();
 	audio_playTrack(newTrack, item);
 }
 
@@ -122,7 +154,7 @@ void audio_prevTrack(){
 
 		newTrack = reinterpret_cast<AudioTrackData*>(item->getData());
 	}
-	playing = false;
+//	audio_stop();
 	audio_playTrack(newTrack, item);
 }
 
@@ -164,9 +196,9 @@ bool audio_getTag(fs::File* file){
 	*audioTags = AudioFileSourceID3(audioFile);
 	audioTags->RegisterMetadataCB(data_getFileTags, (void*)audioFile);
 	log_d("beginning player ; Free heap: %d", ESP.getFreeHeap());
-	bool ret = player->begin(audioTags, audioOutput);
+	playing = player->begin(audioTags, audioOutput);
 	log_d("player beginned ;  Free heap: %d", ESP.getFreeHeap());
-	return ret;
+	return playing;
 
 //	audioFile->close();
 }
