@@ -1,41 +1,53 @@
-Make a dynamic menu system
+			Make a dynamic menu system
 
-	done, but needs to change the basic node. 		ok
+ok				done, but needs to change the basic node.
 
-See if there is no memory leak in MenuIem, MenuList and AudioTrackData, with malloc / free for const char* members.
+			See if there is no memory leak in MenuIem, MenuList and AudioTrackData, with malloc / free for const char* members.
 
-Listing files on drive								ok
+ok			Listing files on drive
 
-Checking existing files against database.
-	checking listed files still exist 				ok
-	checking for new files 							wop // ok, but needs a way to do it without parsing the whole filesystem !
-	Breaking the XML database into smaller chunks 	ok // each AudioTrackData object is saved as raw bytes to SD card.	
+			Checking existing files against database.
+				checking listed files still exist
+wop				checking for new files 								// ok, but needs a way to do it without parsing the whole filesystem !
+ok				Breaking the XML database into smaller chunks 		// each AudioTrackData object is saved as raw bytes to SD card.	
 
-Create a player GUI									wop // lacks album art.
+wop			Create a player GUI										// lacks album art.
 
-See how to make updates automatic. 					wop : use last write time on folders, but it's not recursive
+wop			See how to make updates automatic. 						// use last write time on folders, but it's not recursive
 
-Implementing touch wheel
-	done, but needs tweaking as it's pretty instable for now.
+wop			Implementing touch wheel
+				done, but needs tweaking as it's pretty instable for now.
 
-make the player play songs
-	start playing.									ok
-	Next / previous song.							ok
-	Auto next song on song end 						ok
-	display informations							ok, except album covers.
-	compute file duration
-	add soft mute/unmute / pause/unpause			ok
+			make the player play songs
+ok				start playing.
+ok				Next / previous song.
+ok				Auto next song on song end
+ok				display informations								// except album covers.
+				compute file duration								// need a function that checks the file. Maybe use it to get tags too.
+ok				add soft mute/unmute / pause/unpause
+				Make audio output to several outputs (line, S/Pdif, bluetooth, etc.)
+				Manage headphone amplifier
 
-audio buffer is not fed enough when navigating menus !
-	use an interrupt to populate audio buffer.		/
-	Audio update has been switched to a task.		ok
-	use DMA for TFT SPI updates. 					ok
-	use a display queue buffer for updating. 		ok
+			audio buffer is not fed enough when navigating menus !
+/				use an interrupt to populate audio buffer.
+ok				Audio update has been switched to a task.
+ok				use DMA for TFT SPI updates.
+ok				use a display queue buffer for updating.
 
-//////////////////////////////////
+			Add the possibility to change SD card while running.
+				Menu to safely remove SD card
+				when SD card is removed, check for reinsertion
 
-I18n options : create a langage file (xml ?) for translations.
+			Implement energy saving
+				dimming screen intensity when not touched
+					add a menu to set the delay
+				putting to deep sleep when stopped
+					same menu as above for delay
 
-Play something else than mp3.
+///////////////////////////////////////////////////////////////////////
 
-Give the possibility to change the color scheme.	wop / branch color. Already created a struct in display.
+			I18n options : create a langage file (xml ?) for translations.
+
+			Play something else than mp3.
+
+wop			Give the possibility to change the color scheme.		// branch color. Already created a struct in display.

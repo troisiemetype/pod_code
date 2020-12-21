@@ -27,6 +27,7 @@ void menu_init(){
 	songs->setName("songs");
 }
 
+// Add a new song to menu.
 void menu_pushSong(AudioTrackData *song){
 //	Serial.printf("push to menu : %s\n", song->getName());
 	MenuItem *songEntry = new MenuItem();
@@ -38,6 +39,8 @@ void menu_pushSong(AudioTrackData *song){
 
 }
 
+// Check that song has already been added.
+// once all the database has been parsed, data_xxx will check every existing files, seeking for new ones.
 bool menu_hasSong(const char *filename){
 	MenuItem *item = songs->getFirst();
 	for(;;){
@@ -257,7 +260,6 @@ int16_t menu_sortRank(MenuItem *a, MenuItem *b){
 }
 
 // Display the current menu on screen.
-// TODO : make the menu update line after line, to avoid audio buffer underrun.
 void menu_write(MenuList *list){
 //	Serial.printf("making menu %s\n", list->getName());
 //	display_makeMenuBG();
