@@ -64,17 +64,20 @@ void data_readDatabase(fs::File *dir){
 	for(;;){
 		fs::File file = dir->openNextFile();
 		if(!file) break;
-
+/*
 		track = new AudioTrackData();
 		data_readAudioTrackData(&file, track);
+*/
+		AudioTrackData track = AudioTrackData();
+		data_readAudioTrackData(&file, &track);
 		// check if the file still exists in /music
-		if(SD_MMC.exists(track->getFilename())){
+		if(SD_MMC.exists(track.getFilename())){
 			// if it exists, push it to menu.
-			menu_pushSong(track);
+			menu_pushSong(&track);
 			file.close();
 		} else {
 			// If it doesn't, we delete the entry in database, and the track info just created.
-			delete track;
+//			delete track;
 			file.close();
 			SD_MMC.remove(file.name());
 		}
@@ -108,18 +111,18 @@ void data_parseFolder(fs::File *folder, uint8_t lvl){
 
 void data_checkSong(fs::File *file){
 	// Get filename, then extract extension to check for file validity
-	// We only (for now i hope) want to deal with mp3 files.
+	// We only (for now I hope) want to deal with mp3 files.
 	const char *name = file->name();
+	// We check if menu has already this song (which has already been loaded from database)
+	if(menu_hasSong(name)) return;
+	// Then we look for file extension
 	const char *ext = strrchr(name, '.');
 
 //	Serial.printf("file %s ; extension %s\n", name, ext);
 	if(strcmp(ext, ".mp3") != 0) return;
 
-	// We check if menu has already this song (which has already been loaded from database)
-	if(menu_hasSong(name)) return;
-
 //	log_d("getting tag");
-//	Serial.printf("getting tags for  %s\n", name);
+	Serial.printf("getting tags for  %s\n", name);
 	if(audio_getTag(file)){
 		tagEOF = false;
 		totalSize += file->size();
@@ -133,14 +136,21 @@ void data_checkSong(fs::File *file){
 		player->stop();
 		data_writeAudioTrackData(track);
 		menu_pushSong(track);
+		delete track;
 //		Serial.println("song added to menu and in database.");
 //		Serial.printf("added\t%s\n", name);
 	}
 
 }
 
+void data_voidToAudioTrackData(void *data, AudioTrackData *audioData){
+	char *name = reinterpret_cast<char*>(data);
+	fs::File file = SD_MMC.open(name);
+	data_readAudioTrackData(&file, audioData);
+}
+
 void data_readAudioTrackData(fs::File *file, AudioTrackData *track){
-//	Serial.printf("read data from %s\n", file->name());
+	Serial.printf("read data from %s\n", file->name());
 	// make a clone copy of the file, byte fo byte, to the AudioTrackData instance.
 	file->read((uint8_t*)track, sizeof(AudioTrackData) / sizeof(uint8_t));
 
@@ -205,7 +215,7 @@ void data_writeAudioTrackData(AudioTrackData *track){
 	b += file.write((uint8_t*)track->getAlbum(), strlen(track->getAlbum()) + 1);
 	b += file.write((uint8_t*)track->getFilename(), strlen(track->getFilename()) + 1);
 
-//	Serial.printf("%i bytes written to file %s\n", b, dbName);
+	Serial.printf("%i bytes written to file %s\n", b, dbName);
 }
 
 // Populate XML based on SD card content.

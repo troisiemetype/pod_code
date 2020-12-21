@@ -12,6 +12,8 @@ void data_checkNewFiles();
 void data_parseFolder(fs::File *file, uint8_t lvl = 0);
 void data_checkSong(fs::File *file);
 
+void data_voidToAudioTrackData(void *data, AudioTrackData *audioData);
+
 void data_readAudioTrackData(fs::File *file, AudioTrackData *track);
 void data_writeAudioTrackData(AudioTrackData *track);
 

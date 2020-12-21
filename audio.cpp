@@ -22,7 +22,7 @@ enum audioState_t{
 	AUDIO_STOPPING,
 } audioState = AUDIO_IDLE;
 
-AudioTrackData *current = NULL;
+AudioTrackData current = AudioTrackData();
 MenuItem *currentItem = NULL;
 
 bool playing = false;
@@ -94,22 +94,25 @@ void audio_int(){
 	}
 }
 
-void audio_playTrack(AudioTrackData *track, MenuItem *item){
+void audio_playTrack(MenuItem *item){
+
 	// set track infos
-	currentItem = item;
-	if(current != track){
-		current = track;
+	if(currentItem != item){
+		currentItem = item;
+		const char *filename = reinterpret_cast<const char*>(item->getData());
+		fs::File file= SD_MMC.open(filename);
+		data_readAudioTrackData(&file, &current);
 		audio_stop();
 
 //		playing = 0;
 //		audioFile->close();
-		audioFile->open(current->getFilename());
+		audioFile->open(current.getFilename());
 		// todo : stopping and changing file make the player reboot.
 //		player->stop();
 //		player = new AudioGeneratorMP3();
 		*audioTags = AudioFileSourceID3(audioFile, true);
 		playing = player->begin(audioTags, audioOutput);
-		Serial.printf("playing %s : %i\n", current->getName(), playing);
+		Serial.printf("playing %s : %i\n", current.getName(), playing);
 		log_d("Free heap: %d", ESP.getFreeHeap());
 		if(playing){
 			audioState = AUDIO_PLAY;
@@ -133,7 +136,7 @@ void audio_stop(){
 }
 
 void audio_updateDisplay(){
-	if(!current) return;
+	if(!currentItem) return;
 
 	// Attach buttons callbacks
 	io_deattachAllCB();
@@ -145,7 +148,7 @@ void audio_updateDisplay(){
 	display_setState(PLAYER);
 	display_pushHeader("playing");
 	display_pushClearDisplay();
-	display_pushPlayer(current->getArtist(), current->getAlbum(), current->getName(), current->getTrack());
+	display_pushPlayer(current.getArtist(), current.getAlbum(), current.getName(), current.getTrack());
 	display_pushPlayerProgress(audioCounter / 1000, 134);	
 }
 
@@ -153,26 +156,22 @@ void audio_nextTrack(){
 	MenuItem *item = currentItem->getNext();
 	if(!item) return;
 
-	AudioTrackData *newTrack = reinterpret_cast<AudioTrackData*>(item->getData());
-
 //	audio_stop();
-	audio_playTrack(newTrack, item);
+	audio_playTrack(item);
 }
 
 // TODO : make the player call the menu from which the song was taken, when reaching first.
+// TODO : find a way to rewind the current song.
 void audio_prevTrack(){
 	MenuItem *item = currentItem->getPrevious();
-	AudioTrackData *newTrack = current;
 	if((audioCounter / 1000) >= 1){
-		current = NULL;
 		item = currentItem;
 	} else {
 		if(!item) return;
 
-		newTrack = reinterpret_cast<AudioTrackData*>(item->getData());
 	}
 //	audio_stop();
-	audio_playTrack(newTrack, item);
+	audio_playTrack(item);
 }
 
 void audio_pause(){
