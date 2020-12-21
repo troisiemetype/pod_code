@@ -19,7 +19,7 @@ void audio_init();
 bool audio_update();
 void audio_int();
 
-void audio_playTrack(AudioTrackData *track, MenuItem *item);
+void audio_playTrack(MenuItem *item);
 
 void audio_stop();
 

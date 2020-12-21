@@ -159,7 +159,7 @@ void io_updateWheel(){
 void io_updateBattery(){
 //	batStat = digitalRead(BATTERY_STAT);
 //	batLevel = analogRead(BATTERY_LEVEL);
-	if((millis() - cnt) > 2){
+	if((millis() - cnt) > 1000){
 		cnt = millis();
 		if(++batLevel > 4095) batLevel = 0;
 		display_pushBattery((float)batLevel / 4095);

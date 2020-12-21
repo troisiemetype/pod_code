@@ -36,6 +36,7 @@ hw_timer_t *audioTimer = NULL;
 // player->loop() takes around 650us to run. On begin it's 11650us, and can take 2500us from time to time
 
 volatile uint32_t audioCounter = 0;
+uint32_t prevAudioCounter = 0;
 volatile bool audioCounterFlag = false;
 float audioGain = 1.0;
 const float MAX_AUDIO_GAIN = 1.0;
@@ -69,11 +70,14 @@ bool audio_update(){
 
 		if(audioCounterFlag){
 			audioCounterFlag = false;
-			display_pushPlayerProgress(audioCounter / 1000, 300);
 			if(audioState == AUDIO_MUTING){
 				audio_mute();
 			} else if(audioState == AUDIO_UNMUTING){
 				audio_unmute();
+			}
+			if(((audioCounter - prevAudioCounter) / 1000) >= 1){
+				display_pushPlayerProgress(audioCounter / 1000, 300);
+				prevAudioCounter = audioCounter;
 			}
 		}
 
@@ -94,11 +98,13 @@ void audio_int(){
 	}
 }
 
-void audio_playTrack(AudioTrackData *track, MenuItem *item){
+void audio_playTrack(MenuItem *item){
 	// set track infos
-	currentItem = item;
-	if(current != track){
-		current = track;
+	if(item != currentItem){
+		currentItem = item;
+
+		current = reinterpret_cast<AudioTrackData*>(item->getData());
+
 		audio_stop();
 
 //		playing = 0;
@@ -109,16 +115,16 @@ void audio_playTrack(AudioTrackData *track, MenuItem *item){
 //		player = new AudioGeneratorMP3();
 		*audioTags = AudioFileSourceID3(audioFile, true);
 		playing = player->begin(audioTags, audioOutput);
-		Serial.printf("playing %s : %i\n", current->getName(), playing);
-		log_d("Free heap: %d", ESP.getFreeHeap());
+//		Serial.printf("playing %s : %i\n", current->getName(), playing);
+//		log_d("Free heap: %d", ESP.getFreeHeap());
 		if(playing){
 			audioState = AUDIO_PLAY;
 			audioCounter = 0;
 			timerAlarmEnable(audioTimer);
 		}
+//		Serial.printf("update display %s : %i\n", current->getName(), playing);
+		audio_updateDisplay();
 	}
-
-	audio_updateDisplay();
 
 }
 
@@ -134,7 +140,7 @@ void audio_stop(){
 
 void audio_updateDisplay(){
 	if(!current) return;
-
+//	log_d("Free heap: %d", ESP.getFreeHeap());
 	// Attach buttons callbacks
 	io_deattachAllCB();
 	io_attachCBRight(audio_nextTrack);
@@ -153,26 +159,26 @@ void audio_nextTrack(){
 	MenuItem *item = currentItem->getNext();
 	if(!item) return;
 
-	AudioTrackData *newTrack = reinterpret_cast<AudioTrackData*>(item->getData());
+//	AudioTrackData *newTrack = reinterpret_cast<AudioTrackData*>(item->getData());
 
 //	audio_stop();
-	audio_playTrack(newTrack, item);
+	audio_playTrack(item);
 }
 
 // TODO : make the player call the menu from which the song was taken, when reaching first.
 void audio_prevTrack(){
 	MenuItem *item = currentItem->getPrevious();
-	AudioTrackData *newTrack = current;
-	if((audioCounter / 1000) >= 1){
-		current = NULL;
+	if((audioCounter / 1000) >= 2){
+//		current = NULL;
+		// Hack forcing audio_play to enter
+		MenuItem *tmp = item;
 		item = currentItem;
+		currentItem = tmp;
 	} else {
 		if(!item) return;
-
-		newTrack = reinterpret_cast<AudioTrackData*>(item->getData());
 	}
 //	audio_stop();
-	audio_playTrack(newTrack, item);
+	audio_playTrack(item);
 }
 
 void audio_pause(){

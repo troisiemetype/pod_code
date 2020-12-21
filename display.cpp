@@ -24,7 +24,8 @@ displayState_t displayState;
 displayQueue_t displayQueue;
 displayBuffer_t displayBuffer[DISPLAY_QUEUE_SIZE];
 headerData_t displayHeaderData;
-lineData_t displayMenuData[DISPLAY_MAX_MENU_ITEM];
+lineData_t displayMenuData[DISPLAY_MAX_MENU_ITEM * 2];
+lineData_t *currentMenuData = displayMenuData;
 playerData_t displayPlayerData;
 timeData_t displayTimeData[3];
 vuData_t displayVuData;
@@ -33,6 +34,7 @@ float displayBattery = 0;
 
 TFT_eSprite menuSprite = TFT_eSprite(&tft);
 TFT_eSprite entrySprite = TFT_eSprite(&tft);
+TFT_eSprite thinEntrySprite = TFT_eSprite(&tft);
 TFT_eSprite headerSprite = TFT_eSprite(&tft);
 
 TFT_eSprite vuSprite = TFT_eSprite(&tft);
@@ -88,6 +90,12 @@ void display_init(){
 		displayBuffer[i].next = &displayBuffer[i + 1];
 	}
 	displayBuffer[limit].next = displayBuffer;
+
+	limit = (DISPLAY_MAX_MENU_ITEM * 2) - 1;
+	for(uint8_t i = 0; i < limit; ++i){
+		displayMenuData[i].next = &displayMenuData[i + 1];
+	}
+	displayMenuData[limit].next = displayMenuData;
 
 
 	menuBuffer = new lineData_t[DISPLAY_MAX_MENU_ITEM];
@@ -149,6 +157,14 @@ void display_initSprites(){
 	entrySprite.createSprite(SCREEN_WIDTH, DISPLAY_MENU_LINE_HEIGHT);
 	entrySprite.setTextPadding(0);
 	entrySprite.setTextDatum(ML_DATUM);
+
+	thinEntrySprite.setColorDepth(16);
+	thinEntrySprite.loadFont(NotoSans16);
+	thinEntrySprite.createSprite(SCREEN_WIDTH, DISPLAY_MENU_LINE_HEIGHT);
+	thinEntrySprite.fillSprite(theme.bg);
+	thinEntrySprite.setTextColor(theme.txt, theme.bg);
+	thinEntrySprite.setTextPadding(0);
+	thinEntrySprite.setTextDatum(ML_DATUM);
 
 	vuSprite.setColorDepth(16);
 //	vuSprite.createSprite(DISPLAY_VU_WIDTH, DISPLAY_VU_HEIGHT);
@@ -227,8 +243,11 @@ void display_pushHeader(const char *header){
 	display_pushBattery(displayBattery);
 }
 
+// TODO : Make a circular buffer for menu entry as well.
 void display_pushMenu(const char *name, bool active, uint8_t index){
-	lineData_t *bf = &displayMenuData[index];
+//	lineData_t *bf = &displayMenuData[index];
+	currentMenuData = currentMenuData->next;
+	lineData_t *bf = currentMenuData;
 	bf->name = name;
 	bf->active = active;
 	bf->pos = DISPLAY_MENU_LINE_HEIGHT * (index + 1);
@@ -240,36 +259,45 @@ void display_pushMenu(const char *name, bool active, uint8_t index){
 
 void display_pushMenuPadding(uint8_t index){
 	for(uint8_t i = index; i < DISPLAY_MAX_MENU_ITEM; ++i){
-		display_pushMenu("", 0, i);
+		display_pushMenu("\0", 0, i);
 	}
 }
 
 void display_pushPlayer(const char *artist, const char *album, const char *song, uint8_t track){
+/*
 	displayPlayerData.artist = artist;
 	displayPlayerData.album = album;
 	displayPlayerData.name = song;
 	displayPlayerData.track = track;
-
-	lineData_t *bf = &displayMenuData[1];
+*/
+	currentMenuData = currentMenuData->next;
+	lineData_t *bf = currentMenuData;
 	bf->name = song;
 	bf->active = 0;
 	bf->pos = 44;
+//	Serial.printf(" pushing %s\n", bf->name);
 	_display_populateBuffer(_display_updateLine, reinterpret_cast<void*>(bf));
 
-	bf = &displayMenuData[2];
+	currentMenuData = currentMenuData->next;
+	bf = currentMenuData;
 	bf->name = album;
 	bf->active = 0;
 	bf->pos = 66;
+//	Serial.printf(" pushing %s\n", bf->name);
 	_display_populateBuffer(_display_updateLineThin, reinterpret_cast<void*>(bf));
 
-	bf = &displayMenuData[3];
+	currentMenuData = currentMenuData->next;
+	bf = currentMenuData;
 	bf->name = artist;
 	bf->active = 0;
 	bf->pos = 88;
+//	Serial.printf(" pushing %s\n", bf->name);
 	_display_populateBuffer(_display_updateLineThin, reinterpret_cast<void*>(bf));
 
-	bf = &displayMenuData[4];
+	currentMenuData = currentMenuData->next;
+	bf = currentMenuData;
 // Find a way to display the track number !
+	bf->name = "\0";
 	bf->active = 0;
 	bf->pos = 110;
 	_display_populateBuffer(_display_updateLineThin, reinterpret_cast<void*>(bf));
@@ -325,7 +353,10 @@ void display_pushBattery(float value){
 }
 
 void _display_populateBuffer(void (*fn)(void*), void *data){
-	if(displayQueue.available <= 0) return;
+	if(displayQueue.available <= 0){
+//		Serial.printf("buffer unavailable ! Losing %i", (uint32_t)(currentMenuData));
+		return;
+	}
 //	Serial.printf("populating buffer %i\n", displayQueue.size);
 
 	displayBuffer_t *bf = displayQueue.end;
@@ -371,6 +402,7 @@ void _display_updateLine(void *data){
 	sprPtr = reinterpret_cast<uint16_t*>(entrySprite.getPointer());
 
 //	Serial.printf("displaying menu %s, active : %i; pos : %i\n", bf->name, bf->active, bf->pos);
+//	Serial.printf("new line : %s\n", bf->name);
 	entrySprite.fillSprite(bf->active ? theme.bgSelect : theme.bg);
 	entrySprite.setTextColor(bf->active ? theme.txtSelect : theme.txt, bf->active ? theme.bgSelect : theme.bg);
 	entrySprite.drawString(bf->name, 1, 11);
@@ -379,14 +411,13 @@ void _display_updateLine(void *data){
 
 void _display_updateLineThin(void *data){
 	lineData_t *bf = reinterpret_cast<lineData_t*>(data);
-	sprPtr = reinterpret_cast<uint16_t*>(entrySprite.getPointer());	
+	sprPtr = reinterpret_cast<uint16_t*>(thinEntrySprite.getPointer());	
 
-	entrySprite.loadFont(NotoSans16);
-	entrySprite.fillSprite(theme.bg);
-	entrySprite.drawString(bf->name, 1, 11);
+//	Serial.printf("new thin line : %s\n", bf->name);
+	thinEntrySprite.fillSprite(theme.bg);
+	thinEntrySprite.drawString(bf->name, 1, 11);
 	tft.pushImageDMA(0, bf->pos, SCREEN_WIDTH, DISPLAY_MENU_LINE_HEIGHT, sprPtr);
 
-	entrySprite.loadFont(NotoSansBold16);
 }
 
 void _display_updatePlayerProgress(void *data){

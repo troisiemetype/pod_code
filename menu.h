@@ -13,6 +13,8 @@ bool menu_hasSong(const char *filename);
 void menu_makeMenu();
 bool menu_createMusic(MenuList *list, MenuList *album, MenuList *ref);
 
+void menu_utilDisplayList(MenuList *list);
+
 int16_t menu_sortByName(MenuItem *a, MenuItem *b);
 int16_t menu_sortByArtist(MenuItem *a, MenuItem *b);
 int16_t menu_sortByAlbum(MenuItem *a, MenuItem *b);

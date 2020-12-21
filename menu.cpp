@@ -137,10 +137,20 @@ void menu_makeMenu(){
 }
 
 bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
+//	Serial.println("//////////////////////// unsorted ////////////////////////");
+//	menu_utilDisplayList(ref);
+//	Serial.println("//////////////////////// sorting by name ////////////////////////");
 	ref->sort();
+//	menu_utilDisplayList(ref);
+//	Serial.println("//////////////////////// sorting by track ////////////////////////");
 	ref->sortExternal(menu_sortByTrack);
+//	menu_utilDisplayList(ref);
+//	Serial.println("//////////////////////// sorting by album ////////////////////////");
 	ref->sortExternal(menu_sortByAlbum);
+//	menu_utilDisplayList(ref);
+//	Serial.println("//////////////////////// sorting by artist ////////////////////////");
 	ref->sortExternal(menu_sortByArtist);
+//	menu_utilDisplayList(ref);
 //	Serial.println("sorted");
 	MenuItem *lastItem = ref->getLast();
 	MenuItem *item = ref->getFirst();
@@ -214,7 +224,20 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 		}
 		albums->sort();
 	}
+	ref->sort();
 	return 1;
+}
+
+void menu_utilDisplayList(MenuList *list){
+	MenuItem *item = list->getFirst();
+	AudioTrackData *data;
+	for(;;){
+		if(!item) break;
+		data = (AudioTrackData*)item->getData();
+		Serial.printf("new item :\n");
+		Serial.printf("\t%2i\n\t%s\n\t%s\n\t%s\n", data->getTrack(), data->getName(), data->getAlbum(), data->getArtist());
+		item = item->getNext();
+	}
 }
 
 int16_t menu_sortByName(MenuItem *a, MenuItem *b){
@@ -367,9 +390,8 @@ void menu_cbList(void* list){
 void menu_cbSong(void *data){
 //	tft.print("song called");
 	MenuItem *item = reinterpret_cast<MenuItem*>(data);
-	AudioTrackData *d = reinterpret_cast<AudioTrackData*>(item->getData());
 
-	audio_playTrack(d, item);
+	audio_playTrack(item);
 }
 
 void menu_cbPlayer(void *data){

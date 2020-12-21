@@ -18,7 +18,7 @@
 #define COLOR_BG_SELECT 			TFT_DARKGREEN
 #define COLOR_TXT_SELECT 			TFT_WHITE
 
-#define DISPLAY_QUEUE_SIZE			20
+#define DISPLAY_QUEUE_SIZE			32
 #define DISPLAY_MAX_MENU_ITEM		10
 
 #define DISPLAY_HEADER_HEIGHT		22
@@ -94,6 +94,7 @@ struct lineData_t{
 	bool active;
 	bool update;
 	uint16_t pos;
+	lineData_t *next;
 };
 
 struct timeData_t{
