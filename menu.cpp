@@ -29,16 +29,12 @@ void menu_init(){
 
 // Add a new song to menu.
 void menu_pushSong(AudioTrackData *song){
-	Serial.printf("push to menu : %s\n", song->getName());
+//	Serial.printf("push to menu : %s\n", song->getName());
 	MenuItem *songEntry = new MenuItem();
 
 	songEntry->attachCallback(menu_cbSong, reinterpret_cast<void*>(songEntry));
-//	songEntry->attachData(reinterpret_cast<void*>(song));
-	char *filename = new char[strlen(song->getFilename()) + 1];
-	strcpy(filename, song->getFilename());
-	songEntry->attachData(reinterpret_cast<void*>(filename));
-
-	songEntry->setName(song->getName());
+	songEntry->attachData(reinterpret_cast<void*>(song));
+	songEntry->attachName(song->getName());
 	songs->addChild(songEntry);
 
 }
@@ -49,12 +45,9 @@ bool menu_hasSong(const char *filename){
 	MenuItem *item = songs->getFirst();
 	for(;;){
 		if(!item) break;
-/*
+
 		AudioTrackData *song = reinterpret_cast<AudioTrackData*>(item->getData());
 		if(strcmp(filename, song->getFilename()) == 0) return true;
-*/
-		char *name = reinterpret_cast<char*>(item->getData());
-		if(strcmp(filename, name) == 0) return true;
 		item = songs->getNext();
 	}
 	return false;
@@ -154,12 +147,8 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 	MenuList *listArtists = NULL;
 	MenuList *listArtistsAlbums = NULL;
 	MenuList *listAlbums = NULL;
-
-	AudioTrackData song;
-	AudioTrackData lastSong;
-	data_voidToAudioTrackData(item->getData(), &song);
-	data_voidToAudioTrackData(lastItem->getData(), &lastSong);
-
+	AudioTrackData *song = reinterpret_cast<AudioTrackData*>(item->getData());
+	AudioTrackData *lastSong = reinterpret_cast<AudioTrackData*>(lastItem->getData());
 //	Serial.printf("first song : %s\n", song->getFilename());
 
 //		Serial.printf("%i\t | %s\t\t | %s\t\t | %s\t\t\n", song->getTrack(), song->getArtist(), song->getAlbum(), song->getName());
@@ -167,7 +156,7 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 	for(;;){
 //		Serial.printf("%s\n", song->getArtist());
 		listArtists = new MenuList();
-		listArtists->setName(song.getArtist());
+		listArtists->setName(song->getArtist());
 		listArtists->attachCallback(menu_cbList, NULL);
 		artists->addChild(listArtists);
 
@@ -175,12 +164,12 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 		for(;;){
 //			Serial.printf("\t%s\n", song->getAlbum());
 			listAlbums = new MenuList();
-			listAlbums->setName(song.getAlbum());
+			listAlbums->setName(song->getAlbum());
 			listAlbums->attachCallback(menu_cbList, NULL);
 			albums->addChild(listAlbums);
 
 			listArtistsAlbums = new MenuList();
-			listArtistsAlbums->setName(song.getAlbum());
+			listArtistsAlbums->setName(song->getAlbum());
 			listArtistsAlbums->attachCallback(menu_cbList, NULL);
 			listArtists->addChild(listArtistsAlbums);
 
@@ -191,8 +180,8 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 //				Serial.printf("item @%i", (uint32_t)item);
 //				Serial.printf("adding %s to menu\n", song->getFilename());
 				MenuItem *newItem = new MenuItem();
-				newItem->attachData((void*)(song.getFilename()));
-				newItem->setName(song.getName());
+				newItem->attachData(song);
+				newItem->attachName(song->getName());
 				newItem->attachCallback(menu_cbSong, reinterpret_cast<void*>(newItem));
 				listAlbums->addChild(newItem);
 				// TODO: try copy constructor
@@ -205,17 +194,17 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 				lastSong = song;
 				item = ref->getNext();
 				lastSong = song;
-				if(item != NULL) data_voidToAudioTrackData(item->getData(), &song);
+				if(item != NULL) song = reinterpret_cast<AudioTrackData*>(item->getData());
 
-				if((item == NULL) || (strcmp(song.getAlbum(), lastSong.getAlbum()))){
+				if((item == NULL) || (strcmp(song->getAlbum(), lastSong->getAlbum()))){
 					listAlbums->sortExternal(menu_sortByTrack);
 					listArtistsAlbums->sortExternal(menu_sortByTrack);
 					break;
 				}
 				lastSong = song;
-				data_voidToAudioTrackData(item->getData(), &song);
+				song = reinterpret_cast<AudioTrackData*>(item->getData());
 			}
-			if((item == NULL) || (strcmp(song.getArtist(), lastSong.getArtist()))){
+			if((item == NULL) || (strcmp(song->getArtist(), lastSong->getArtist()))){
 				listArtists->sort();
 				break;
 			}
@@ -229,67 +218,38 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 }
 
 int16_t menu_sortByName(MenuItem *a, MenuItem *b){
-/*	AudioTrackData *_a = reinterpret_cast<AudioTrackData*>(a->getData());
+	AudioTrackData *_a = reinterpret_cast<AudioTrackData*>(a->getData());
 	AudioTrackData *_b = reinterpret_cast<AudioTrackData*>(b->getData());
-*/
-	AudioTrackData dataA;
-	AudioTrackData dataB;
-	data_voidToAudioTrackData(a->getData(), &dataA);
-	data_voidToAudioTrackData(b->getData(), &dataB);
-
-	return strcmp(dataA.getName(), dataB.getName());
+	return strcmp(_a->getName(), _b->getName());
 }
 
 int16_t menu_sortByArtist(MenuItem *a, MenuItem *b){
-/*
 	AudioTrackData *_a = reinterpret_cast<AudioTrackData*>(a->getData());
 	AudioTrackData *_b = reinterpret_cast<AudioTrackData*>(b->getData());
-*/
-	AudioTrackData dataA;
-	AudioTrackData dataB;
-	data_voidToAudioTrackData(a->getData(), &dataA);
-	data_voidToAudioTrackData(b->getData(), &dataB);
-
-//	return strcmp(_a->getArtist(), _b->getArtist());
-	return strcmp(dataA.getArtist(), dataB.getArtist());
+	return strcmp(_a->getArtist(), _b->getArtist());
 }
 
 int16_t menu_sortByAlbum(MenuItem *a, MenuItem *b){
-/*	AudioTrackData *_a = reinterpret_cast<AudioTrackData*>(a->getData());
+	AudioTrackData *_a = reinterpret_cast<AudioTrackData*>(a->getData());
 	AudioTrackData *_b = reinterpret_cast<AudioTrackData*>(b->getData());
-*/
-	AudioTrackData dataA;
-	AudioTrackData dataB;
-	data_voidToAudioTrackData(a->getData(), &dataA);
-	data_voidToAudioTrackData(b->getData(), &dataB);
-
-//	return strcmp(_a->getAlbum(), _b->getAlbum());
-	return strcmp(dataA.getAlbum(), dataB.getAlbum());
+	return strcmp(_a->getAlbum(), _b->getAlbum());
 }
-/*
+
 int16_t menu_sortByYear(MenuItem *a, MenuItem *b){
 	AudioTrackData *_a = reinterpret_cast<AudioTrackData*>(a->getData());
 	AudioTrackData *_b = reinterpret_cast<AudioTrackData*>(b->getData());
 	return (_a->getYear() - _b->getYear());
 }
-*/
-int16_t menu_sortByTrack(MenuItem *a, MenuItem *b){
-/*	AudioTrackData *_a = reinterpret_cast<AudioTrackData*>(a->getData());
-	AudioTrackData *_b = reinterpret_cast<AudioTrackData*>(b->getData());
-*/
-	AudioTrackData dataA;
-	AudioTrackData dataB;
-	data_voidToAudioTrackData(a->getData(), &dataA);
-	data_voidToAudioTrackData(b->getData(), &dataB);
 
-//	return (_a->getTrack() - _b->getTrack());
-	return (dataA.getTrack() - dataB.getTrack());
+int16_t menu_sortByTrack(MenuItem *a, MenuItem *b){
+	AudioTrackData *_a = reinterpret_cast<AudioTrackData*>(a->getData());
+	AudioTrackData *_b = reinterpret_cast<AudioTrackData*>(b->getData());
+	return (_a->getTrack() - _b->getTrack());
 }
-/*
+
 int16_t menu_sortBySet(MenuItem *a, MenuItem *b){
 	AudioTrackData *_a = reinterpret_cast<AudioTrackData*>(a->getData());
 	AudioTrackData *_b = reinterpret_cast<AudioTrackData*>(b->getData());
-
 	return (_a->getSet() - _b->getSet());
 }
 
@@ -298,7 +258,7 @@ int16_t menu_sortRank(MenuItem *a, MenuItem *b){
 	AudioTrackData *_b = reinterpret_cast<AudioTrackData*>(b->getData());
 	return (_a->getPop() - _b->getPop());
 }
-*/
+
 // Display the current menu on screen.
 void menu_write(MenuList *list){
 //	Serial.printf("making menu %s\n", list->getName());
@@ -407,8 +367,9 @@ void menu_cbList(void* list){
 void menu_cbSong(void *data){
 //	tft.print("song called");
 	MenuItem *item = reinterpret_cast<MenuItem*>(data);
+	AudioTrackData *d = reinterpret_cast<AudioTrackData*>(item->getData());
 
-	audio_playTrack(item);
+	audio_playTrack(d, item);
 }
 
 void menu_cbPlayer(void *data){
