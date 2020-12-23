@@ -112,14 +112,14 @@ void data_checkSong(fs::File *file){
 	const char *name = file->name();
 	const char *ext = strrchr(name, '.');
 
-//	Serial.printf("file %s ; extension %s\n", name, ext);
+	Serial.printf("file %s ; extension %s\n", name, ext);
 	if(strcmp(ext, ".mp3") != 0) return;
 
 	// We check if menu has already this song (which has already been loaded from database)
 	if(menu_hasSong(name)) return;
 
 //	log_d("getting tag");
-//	Serial.printf("getting tags for  %s\n", name);
+	Serial.printf("getting tags for  %s\n", name);
 	if(audio_getTag(file)){
 		tagEOF = false;
 		totalSize += file->size();
@@ -131,11 +131,12 @@ void data_checkSong(fs::File *file){
 			player->loop();
 		}
 		player->stop();
-		data_writeAudioTrackData(track);
-		menu_pushSong(track);
 //		Serial.println("song added to menu and in database.");
 //		Serial.printf("added\t%s\n", name);
 	}
+	data_writeAudioTrackData(track);
+	menu_pushSong(track);
+//	data_getTrackLength(file, track);
 
 }
 
@@ -206,6 +207,23 @@ void data_writeAudioTrackData(AudioTrackData *track){
 	b += file.write((uint8_t*)track->getFilename(), strlen(track->getFilename()) + 1);
 
 //	Serial.printf("%i bytes written to file %s\n", b, dbName);
+}
+
+void data_getTrackLength(fs::File *file, AudioTrackData *track){
+	Serial.printf("getting length from %s\n", file->name());
+	uint32_t size = 0;
+	uint8_t c;
+	// We read thewhole file to count frame headers.
+	while(file->available()){
+		// We are looking for 11 bits set in a row.
+		// If we found them, it's a new frame header, so we increase the number of frames for the track.
+		c = file->read();
+		if((c == 0xFF) && (file->peek() & 0xE0)){
+			size ++;
+		}
+	}
+	track->setDuration(size * 26);
+	Serial.printf("%i frames / %ims\n", size, size * 26);
 }
 
 // Populate XML based on SD card content.

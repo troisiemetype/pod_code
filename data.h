@@ -15,6 +15,8 @@ void data_checkSong(fs::File *file);
 void data_readAudioTrackData(fs::File *file, AudioTrackData *track);
 void data_writeAudioTrackData(AudioTrackData *track);
 
+void data_getTrackLength(fs::File *file, AudioTrackData *track);
+
 void data_getFileTags(void *cbData, const char *type, bool isUnicode, const char *string);
 /*
 theme_t* data_getTheme(theme_t *theme);

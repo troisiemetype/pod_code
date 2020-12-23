@@ -76,7 +76,7 @@ bool audio_update(){
 				audio_unmute();
 			}
 			if(((audioCounter - prevAudioCounter) / 1000) >= 1){
-				display_pushPlayerProgress(audioCounter / 1000, 300);
+				display_pushPlayerProgress(audioCounter / 1000, current->getDuration() / 1000);
 				prevAudioCounter = audioCounter;
 			}
 		}
@@ -152,7 +152,7 @@ void audio_updateDisplay(){
 	display_pushHeader("playing");
 	display_pushClearDisplay();
 	display_pushPlayer(current->getArtist(), current->getAlbum(), current->getName(), current->getTrack());
-	display_pushPlayerProgress(audioCounter / 1000, 134);	
+	display_pushPlayerProgress(audioCounter / 1000, current->getDuration() / 1000);	
 }
 
 void audio_nextTrack(){

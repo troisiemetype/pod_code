@@ -61,6 +61,7 @@ theme_t theme = {
 void display_init(){
 	display_initBacklight();
 	tft.init();
+	tft.invertDisplay(1);
 	tft.setRotation(1);
 	tft.initDMA();
 //	For memory only : TFT is the only peripheral on the SPI bus, with its CS pin permanentely tied to GND.

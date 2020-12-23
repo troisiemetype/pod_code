@@ -35,6 +35,9 @@ public:
 	void setPop(uint8_t rank);
 	uint8_t getPop();
 
+	void setDuration(uint32_t length){_duration = length;}
+	uint32_t getDuration(){return _duration;}
+
 protected:
 	void allocateChar(const char *text, char **memberVar);
 
@@ -48,6 +51,7 @@ private:
 	uint8_t _set;
 	bool _compilation;
 	uint8_t _rank;
+	uint32_t _duration;
 
 };
 
