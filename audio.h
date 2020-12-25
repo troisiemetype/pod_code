@@ -29,6 +29,7 @@ void audio_nextTrack();
 void audio_prevTrack();
 void audio_pause();
 
+void audio_muteThread(void *params);
 void audio_mute();
 void audio_unmute();
 

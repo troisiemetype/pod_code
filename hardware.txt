@@ -1,0 +1,8 @@
+Audio DAC
+	TI PCM5102A
+Audio headphone driver
+	TI TPA6130A2
+IO multiplexer
+	TI TCA9534
+USB converter ?
+	Atmega 16u2 ?

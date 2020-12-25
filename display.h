@@ -125,9 +125,6 @@ void display_init();
 
 void display_initSprites();
 
-void display_initBacklight();
-void display_setBackLight(uint8_t value);
-
 void display_setState(displayState_t state);
 
 theme_t display_getTheme();

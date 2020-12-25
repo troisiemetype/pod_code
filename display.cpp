@@ -6,11 +6,6 @@
 
 TFT_eSPI tft = TFT_eSPI();
 
-const uint8_t TFT_LED = 26;
-const int8_t TFT_LED_CH = 0;
-const int16_t TFT_LED_FREQ = 5000;
-const int8_t TFT_LED_RES = 8;
-
 uint8_t display_index = 0;
 uint8_t display_topIndex = 0;
 bool display_forceUpdate = true;
@@ -59,7 +54,6 @@ theme_t theme = {
 };
 
 void display_init(){
-	display_initBacklight();
 	tft.init();
 	tft.invertDisplay(1);
 	tft.setRotation(1);
@@ -135,11 +129,14 @@ void display_init(){
 
 //	tft.println("esp pod");
 //	tft.printf("line height : %i\n", tft.fontHeight());
+//	hw_setBacklight(255);
 
+/*
 	for(uint8_t i = 0; i < 250; ++i){
 		ledcWrite(TFT_LED_CH, i);
 		delay(5);
 	}
+*/
 }
 
 void display_initSprites(){
@@ -178,16 +175,6 @@ void display_initSprites(){
 	timeSprite.setTextColor(theme.txt, theme.bg);
 	timeSprite.setTextPadding(0);
 
-}
-
-void display_initBacklight(){
-	ledcSetup(TFT_LED_CH, TFT_LED_FREQ, TFT_LED_RES);
-	ledcAttachPin(TFT_LED, TFT_LED_CH);
-	ledcWrite(TFT_LED_CH, 0);
-}
-
-void display_setBackLight(uint8_t value){
-	ledcWrite(TFT_LED_CH, value);
 }
 
 void display_setState(displayState_t state){
@@ -495,7 +482,7 @@ void _display_updateBattery(void *data){
 	vuSprite.fillSprite(theme.headerBg);
 	vuSprite.fillRoundRect(0, 0, width - 2, 11, 2, theme.vuBg);
 	vuSprite.drawRoundRect(0, 0, width - 2, 11, 2, theme.vuCtr);
-	vuSprite.drawFastVLine(width - 1, 3, 6, theme.vuCtr);
+	vuSprite.drawFastVLine(width - 1, 3, 5, theme.vuCtr);
 	vuSprite.fillRoundRect(1, 1, dspValue, 9, 1, color);
 	tft.pushImageDMA(280, 5, width, 11, sprPtr);
 }

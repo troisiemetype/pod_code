@@ -9,12 +9,15 @@
 void io_init();
 void io_initIO();
 
+void io_initPortExpander();
+
 void io_initButtons();
 void io_initWheel();
 
 void io_update();
 
 void io_updateButtons();
+void io_updateReadButtons();
 void io_updateWheel();
 
 void io_updateBattery();

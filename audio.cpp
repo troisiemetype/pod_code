@@ -8,9 +8,9 @@ AudioOutputI2S *audioOutput;
 
 //int8_t audioBuffer[AUDIO_BUFFER_SIZE];
 
-const uint8_t I2S_CLK = 16;
-const uint8_t I2S_DATA = 21;
-const uint8_t I2S_WS = 22;
+const uint8_t I2S_CLK = 5;
+const uint8_t I2S_DATA = 17;
+const uint8_t I2S_WS = 16;
 
 enum audioState_t{
 	AUDIO_IDLE = 0,
@@ -39,8 +39,8 @@ volatile uint32_t audioCounter = 0;
 uint32_t prevAudioCounter = 0;
 volatile bool audioCounterFlag = false;
 float audioGain = 1.0;
-const float MAX_AUDIO_GAIN = 1.0;
-uint8_t muteDelay = 20;						// The time wanted for mute / unmute, in milliseconds
+const float MAX_AUDIO_GAIN = 0.9;
+uint16_t muteDelay = 50;						// The time wanted for mute / unmute, in milliseconds
 
 void audio_init(){
 	audioOutput = new AudioOutputI2S();
@@ -71,9 +71,9 @@ bool audio_update(){
 		if(audioCounterFlag){
 			audioCounterFlag = false;
 			if(audioState == AUDIO_MUTING){
-				audio_mute();
+//				audio_mute();
 			} else if(audioState == AUDIO_UNMUTING){
-				audio_unmute();
+//				audio_unmute();
 			}
 			if(((audioCounter - prevAudioCounter) / 1000) >= 1){
 				display_pushPlayerProgress(audioCounter / 1000, current->getDuration() / 1000);
@@ -115,6 +115,7 @@ void audio_playTrack(MenuItem *item){
 //		player = new AudioGeneratorMP3();
 		*audioTags = AudioFileSourceID3(audioFile, true);
 		playing = player->begin(audioTags, audioOutput);
+		audioOutput->SetGain(MAX_AUDIO_GAIN);
 //		Serial.printf("playing %s : %i\n", current->getName(), playing);
 //		log_d("Free heap: %d", ESP.getFreeHeap());
 		if(playing){
@@ -184,16 +185,41 @@ void audio_prevTrack(){
 void audio_pause(){
 	if(audioState == AUDIO_PLAY){
 		audioState = AUDIO_MUTING;
-//		playing = false;
-//		audioOutput->SetGain(0);
-//		timerAlarmDisable(audioTimer);
-//		audioOutput->stop();
 	} else {
 		audioState = AUDIO_UNMUTING;
-//		playing = true;
-//		audioOutput->SetGain(1);
-//		audioOutput->begin();
-//		timerAlarmEnable(audioTimer);
+		audioOutput->begin();
+	}
+	xTaskCreate(audio_muteThread, "audio mute", 1000, NULL, 1, NULL);
+}
+
+void audio_muteThread(void *params){
+	TickType_t last;
+	last = xTaskGetTickCount();
+	// We want to update the volume every millisecond when (un)muting
+	const TickType_t freq = 1 / portTICK_PERIOD_MS;
+	for(;;){
+		vTaskDelayUntil(&last, freq);
+//		Serial.println(last);
+		if(audioState == AUDIO_MUTING){
+			audioGain -= MAX_AUDIO_GAIN / (float)muteDelay;
+			audioOutput->SetGain(audioGain);
+
+			if(audioGain <= 0.0){
+				audioState = AUDIO_MUTE;
+				audioOutput->stop();
+				vTaskDelete(NULL);
+			}
+		} else if(audioState == AUDIO_UNMUTING){
+			audioGain += MAX_AUDIO_GAIN / (float)muteDelay;
+			audioOutput->SetGain(audioGain);
+
+			if(audioGain >= 1.0){
+				audioState = AUDIO_PLAY;
+//				audioOutput->begin();
+				vTaskDelete(NULL);
+			}
+		}
+
 	}
 }
 
@@ -211,7 +237,7 @@ void audio_unmute(){
 	audioOutput->SetGain(audioGain);
 	if(audioGain >= 1.0){
 		audioState = AUDIO_PLAY;
-		audioOutput->stop();
+		audioOutput->begin();
 	}
 }
 

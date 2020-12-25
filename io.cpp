@@ -2,13 +2,13 @@
 #include "esPod.h"
 
 const uint8_t NB_BUTTONS = 5;
-
+/*
 const uint8_t BTN_CENTER = 0;
 const uint8_t BTN_UP = 34;
 const uint8_t BTN_RIGHT = 36;
 const uint8_t BTN_DOWN = 35;
 const uint8_t BTN_LEFT = 39;
-
+*/
 const uint8_t WHEEL_0 = 33;
 const uint8_t WHEEL_1 = 32;
 const uint8_t WHEEL_2 = 27;
@@ -34,6 +34,7 @@ void (*_io_cbfnWheelClk)(void) = NULL;
 void (*_io_cbfnWheelCClk)(void) = NULL;
 
 PushButton button[NB_BUTTONS];
+uint8_t buttonBit[NB_BUTTONS] = {0, 1, 2, 4, 3};
 
 TouchWheel wheel = TouchWheel(WHEEL_0, WHEEL_1, WHEEL_2, WHEEL_3, WHEEL_4, WHEEL_5);
 
@@ -45,9 +46,14 @@ uint32_t cnt = 0;
 uint16_t batLevel = 0;
 bool batStat = 0;
 
+TCA9534 ioExp = TCA9534();
+
+volatile bool ioInt = 0;
+
 void io_init(){
 	io_initIO();
 	io_initButtons();
+	io_initPortExpander();
 //	__touchInint();
 //	touchSetCycles(uint16_t measure, uint16_t sleep);
 	// measure is the time spent measuring the capacitance of the pin, in 8MHz cycles
@@ -60,12 +66,24 @@ void io_init(){
 
 void io_initIO(){
 	// Enable pullups on SD lines
+	// Change those pullups as SD is operated in one bit mode.
 	pinMode(2, INPUT_PULLUP);
-	pinMode(4, INPUT_PULLUP);
-	pinMode(12, INPUT_PULLUP);
-	pinMode(13, INPUT_PULLUP);
 	pinMode(14, INPUT_PULLUP);
 	pinMode(15, INPUT_PULLUP);
+	// Pullup on TCA9534 INT pin.
+	// No internal pullup on pins 36 and 39, so one is added on the board. (PCB next version)
+	pinMode(39, INPUT);
+}
+
+void io_initPortExpander(){
+	// TCA9534 is hardwire with its three adress pins tied to ground.
+	// Which give address 32 / 0x20.
+	// Interrupt pin is on esp's sensorVN / GPIO39
+	ioExp.begin(0, 0, 0);
+	// Every used bits are input, so direction is 1.
+	// The first two (MSB) bits are not used, an set as output so they are not floating and triggering interrupts.
+	// The third (bit 5) is the amplifier enable.
+	ioExp.setDirection(0b00011111);
 }
 
 void io_initButtons(){
@@ -74,11 +92,19 @@ void io_initButtons(){
 		button[i] = new PushButton();
 	}
 */
-	button[0].begin(BTN_CENTER, PULLUP);
-	button[1].begin(BTN_UP, PULLUP);
-	button[2].begin(BTN_DOWN, PULLUP);
-	button[3].begin(BTN_RIGHT, PULLUP);
-	button[4].begin(BTN_LEFT, PULLUP);
+	// Buttons are mapped like following on the IO expander :
+	//		center 		0
+	//		up 			1
+	// 		down 		2
+	// 		right 		4
+	// 		left 		3
+	// This happens when the front face is designed as back face of the pcb. :D
+
+	button[0].begin(PULLUP);
+	button[1].begin(PULLUP);
+	button[2].begin(PULLUP);
+	button[3].begin(PULLUP);
+	button[4].begin(PULLUP);
 }
 
 void io_update(){
@@ -107,9 +133,17 @@ void io_update(){
 // On a button push, this function is 28ms long !! These are 1234 samples at 44100Hz !
 // TODO : need to find a way to either buffer data, or speedup buttons !
 void io_updateButtons(){
+//	Serial.print("io :");
+	if(ioInt){
+		ioExp.updateInput();
+		ioInt = 0;
+		hw_setBacklight(192);
+	}
 	for(uint8_t i = 0; i < NB_BUTTONS; ++i){
+//		Serial.printf("%i", ioExp.getPin(buttonBit[i]));
 //		state |= (button[i].update() << i);
-		if(button[i].update()){
+		if(button[i].update(ioExp.getPin(buttonBit[i]))){
+			hw_startDelayDiming();
 			if(button[i].isLongPressed()){
 				switch(i){
 					case 0:
@@ -149,8 +183,14 @@ void io_updateButtons(){
 			}
 		}
 	}
+//	Serial.println();
 	return;
 }
+
+void io_updateReadButtons(){
+	ioInt = 1;
+}
+
 
 void io_updateWheel(){
 
