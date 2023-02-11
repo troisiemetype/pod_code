@@ -1,0 +1,82 @@
+	raspberry pi pico pinout
+	Audio (any port)
+		CLK		GPIO 18
+		OUT		GPIO 19
+		WS		GPIO 20
+		S/PDIF	GPIO 21
+
+	SD card (SD 4-wire protocol)
+		CMD		GPIO 16
+		CLK		GPIO 17
+		D0 		GPIO 12
+		D1		GPIO 13
+		D2		GPIO 14
+		D3		GPIO 15
+
+	TFT (8 bit interface)
+		D0-8	GPIO 0-7
+		CSX		GPIO 8
+		WRX		GPIO 9
+		RDX		GPIO 10
+		D/CX 	GPIO 11
+		led BL
+
+	External components
+		SDA 	GPIO 22 (HW I2C1)
+		SCL 	GPIO 23 (HW I2C1)
+
+	buttons (on ATtiny 1616)
+		up
+		down
+		right
+		left
+		center
+		hold
+
+	slider (on ATtiny 1616)
+		T0
+		T1
+		T2
+		T3
+		T4
+		T5
+		T6
+		T7
+
+	Battery test
+		Vbat 	GPIO 26 (ADC0)
+		Vstat	GPIO 27
+
+
+pin list GPIO 0-29		(*) non exposed on pico
+
+0			TFT D0
+1			TFT D1
+2			TFT D2
+3			TFT D3
+4			TFT D4
+5			TFT D5
+6			TFT D6
+7			TFT D7
+8			TFT CSX
+9			TFT WRX
+10			TFT RDX
+11			TFT D/CX
+12			SD D0
+13			SD D1
+14			SD D2
+15			SD D3
+16			SD CMD
+17			SD CLK
+18			SDA
+19			SCL
+20			I2S WS
+21			I2S CLK
+22			I2S OUT
+23*			
+24*			
+25*;led 	
+26	ADC0	Vbat
+27	ADC1	Attiny INT
+28	ADC2	Attiny reset / UPDI
+29	ADC3	S/PDIF
