@@ -15,6 +15,7 @@ AudioTrackData *current = NULL;
 MenuItem *currentItem = NULL;
 
 bool playing = false;
+bool endOfTracklist = false;
 SemaphoreHandle_t audioUpdateMutex;
 
 hw_timer_t *audioTimer = NULL;
@@ -27,14 +28,16 @@ hw_timer_t *audioTimer = NULL;
 volatile uint32_t audioCounter = 0;
 uint32_t prevAudioCounter = 0;
 volatile bool audioCounterFlag = false;
-uint8_t audioGain = 63;
-const uint8_t MAX_AUDIO_GAIN = 63;
+// See audio_init for info about it.
+uint8_t audioGain = 56;
+const uint8_t MAX_AUDIO_GAIN = 56;
 uint16_t muteDelay = 50;						// The time wanted for mute / unmute, in milliseconds
 
 void audio_init(){
 
 	audio.setPinout(I2S_CLK, I2S_WS, I2S_DATA);
-	audio.setVolumeSteps(MAX_AUDIO_GAIN);
+	// We set MAX_AUDIO_GAIN to around 90% of max audio output : at full power, PCM5102 can make my hifi saturate.
+	audio.setVolumeSteps(64);
 	audio.setVolume(MAX_AUDIO_GAIN);
 
 	audioUpdateMutex = xSemaphoreCreateMutex();
@@ -57,28 +60,27 @@ bool audio_update(){
 	if(audioState == AUDIO_PLAY || audioState == AUDIO_MUTING || audioState == AUDIO_UNMUTING){
 		xSemaphoreTake(audioUpdateMutex, portMAX_DELAY);
 		audio.loop();
+		playing = audio.isRunning();
 		xSemaphoreGive(audioUpdateMutex);
 
 		if(audioCounterFlag){
 			audioCounterFlag = false;
-			if(audioState == AUDIO_MUTING){
-//				audio_mute();
-			} else if(audioState == AUDIO_UNMUTING){
-//				audio_unmute();
-			}
+
 			if(((audioCounter - prevAudioCounter) / 1000) >= 1){
-				display_pushPlayerProgress(audioCounter / 1000, current->getDuration() / 1000);
+				display_pushPlayerProgress(audioCounter / 1000, audio.getAudioFileDuration() / 1000);
 				prevAudioCounter = audioCounter;
 			}
 		}
-/*
-		if(!running){
+
+		if(!playing){
 			audio_nextTrack();
+			
+			if(endOfTracklist == true){
+				audioState = AUDIO_IDLE;
+			}		
 		}
-*/
 		return true;
 	}
-
 	return false;
 }
 
@@ -94,6 +96,7 @@ void audio_playTrack(MenuItem *item){
 	// set track infos
 	if(item != currentItem){
 		currentItem = item;
+		endOfTracklist = false;
 
 		current = reinterpret_cast<AudioTrackData*>(item->getData());
 
@@ -145,24 +148,16 @@ void audio_updateDisplay(){
 void audio_nextTrack(){
 	MenuItem *item = currentItem->getNext();
 	if(!item){
-//		menu_update();
-//		MenuList *parent = currentItem->getParent();
-//		parent->getFirst();
-//		menu_cbList(parent);
+		endOfTracklist = true;
 		return;
 	}
 
-//	AudioTrackData *newTrack = reinterpret_cast<AudioTrackData*>(item->getData());
-
-//	audio_stop();
 	audio_playTrack(item);
 }
 
-// TODO : make the player call the menu from which the song was taken, when reaching first.
 void audio_prevTrack(){
 	MenuItem *item = currentItem->getPrevious();
 	if((audioCounter / 1000) >= 2){
-//		current = NULL;
 		// Hack forcing audio_play to enter
 		MenuItem *tmp = item;
 		item = currentItem;
@@ -170,7 +165,6 @@ void audio_prevTrack(){
 	} else {
 		if(!item) return;
 	}
-//	audio_stop();
 	audio_playTrack(item);
 }
 
@@ -214,32 +208,18 @@ void audio_muteThread(void *params){
 	}
 }
 
-/*
-// replaced by mute thread
-void audio_mute(){
-	audioGain -= (MAX_AUDIO_GAIN / muteDelay);
-	audioOutput->SetGain(audioGain);
-	if(audioGain <= 0){
-		audioState = AUDIO_MUTE;
-		audioOutput->stop();
-	}
-}
-
-// Replaced by mute thread
-void audio_unmute(){
-	audioGain += (MAX_AUDIO_GAIN / muteDelay);
-	audioOutput->SetGain(audioGain);
-	if(audioGain >= 1.0){
-		audioState = AUDIO_PLAY;
-		audioOutput->begin();
-	}
-}
-*/
 audioState_t audio_getState(){
 	return audioState;
 }
 
-bool audio_getTag(fs::File* file){
-	// Here we have to implement our functions.
-	return false;
+/*
+void audio_info(const char *info){
+	log_d("info : %s", info);
 }
+void audio_id3data(const char *info){  //id3 metadata
+	log_d("id3data : %s", info);
+}
+void audio_eof_mp3(const char *info){  //end of file
+	log_d("eof_mp3 : %s", info);
+}
+*/

@@ -101,45 +101,37 @@ void data_parseFolder(fs::File *folder, uint8_t lvl){
 }
 
 void data_checkSong(fs::File *file){
-	// Get filename, then extract extension to check for file validity
-	// We only (for now i hope) want to deal with mp3 files.
-//	char *name = (char*)malloc(sizeof(char) * strlen(file->name()) + 1);
-//	*name = '/';
-//	strcat(name, file->name());
-/*
-	char *name = (char*)calloc(128, sizeof(char));
-	*name = '/';
-	strcat(name, file->name());
-	log_d("name : %s", name);
-*/
 	const char *path = file->path();
 	const char *ext = strrchr(path, '.');
 
 //	log_d("file %s ; extension %s", name, ext);
-	if(strcmp(ext, ".mp3") != 0) return;
 
 	// We check if menu has already this song (which has already been loaded from database)
-	if(menu_hasSong(path)) return;
-
-	// returning now, how we don't have the tag parser yet with this library.
-	return;
+	if(menu_hasSong(path)) return;	
 
 //	log_d("getting tag");
 	log_d("getting tags for  %s", path);
-	if(audio_getTag(file)){
-		tagEOF = false;
-		totalSize += file->size();
 
-		track = new AudioTrackData();
-		track->setFilename(path);
+	track = new AudioTrackData();
+	track->setFilename(path);
 
-		while(!tagEOF){
+	tagEOF = false;
 
+	// each file type has its own parser.
+	if(strcmp(ext, ".mp3") == 0){
+		if(data_getTagMp3(file)){
+			log_d("no tags for this file");
+			delete track;
+			return;
 		}
-
-//		Serial.println("song added to menu and in database.");
-//		Serial.printf("added\t%s\n", name);
+	} else {
+		// If we don't have a parser for the type, it's not supported.
+		delete track;
+		return;
 	}
+
+	totalSize += file->size();
+
 	data_writeAudioTrackData(track);
 	menu_pushSong(track);
 //	data_getTrackLength(file, track);
@@ -246,28 +238,135 @@ void data_getTrackLength(fs::File *file, AudioTrackData *track){
 	Serial.printf("%i frames / %ims\n", size, size * 26);
 }
 
+/*
+ *	Reminder of a mp3 ID3 header :
+ *
+ *	Header-header. At the top of the file.
+ *		Bytes		Content
+ *		0-2			TAG identifier. Contains the string "ID3"
+ *		3-4			TAG version.
+ *		5 			Flags.
+ *					note : formated abc00000 with a = unsynchronization, b = extended header, c = experimental indicator
+ *		6-9 		Header size.
+ *					the MSB of each byte is 0, so each byte is encoded on 7 bits.
+ *
+ *	Frames
+ *		Bytes		Content
+ *		0-3			Frame identifier	3 or 4 char word describing the type of info following
+ *		4-7			Size
+ *		8-9			Flags
+ *
+ */
+bool data_getTagMp3(fs::File* file){
+	char header[10];
+	file->read((uint8_t*)header, 10);
+	log_d("header = %s", header);
+	if(header[0] != 'I' || header[1] != 'D' || header[2] != '3'){
+		// no header, return. Or see what to do.
+		return 1;
+	}
+	log_d("version %i %i", header[3], header[4]);
+
+	// Skipping flags.
+
+	// Determinig header size.
+	uint32_t size = 0;
+	for(uint8_t i = 6; i < 10; i++){
+//		log_d("byte : %i", header[i + 6]);
+		size <<= 7;
+		uint32_t add = header[i];
+		size += add;
+	}
+	log_d("header size : %i", size);
+
+	int32_t consummed = size;
+
+	// parsing header until size bytes have been read.
+	while(consummed){
+		// getting identifier.
+		char frameIdentifier[5];
+		file->read((uint8_t*)frameIdentifier, 4);
+		consummed -= 4;
+		frameIdentifier[4] = 0;
+
+		// account for 0-padding in tags
+		if(frameIdentifier[0] == 0 && frameIdentifier[1] == 0 && frameIdentifier[2] == 0 && frameIdentifier[3] == 0){
+			log_d("padding");
+
+			data_storeTag("eof", "");
+/*
+			char c = 0;
+			while(c == 0){
+				c = file->read();
+			}
+*/
+			return 0;
+		}
+
+		log_d("id : %s", frameIdentifier);
+
+		// Determining frame size.
+		uint32_t frameSize = 0;
+		for(uint8_t i = 0; i < 4; i++){
+	//		log_d("byte : %i", header[i + 6]);
+			frameSize <<= 8;
+			uint32_t add = (uint32_t)file->read();
+			consummed--;
+//			log_d("byte %i", add);
+			frameSize += add;
+		}
+		log_d("frame size : %i", frameSize);
+
+
+		// Skipping flags for now.
+		file->read();
+		file->read();
+		consummed -=2;
+		// We do nothing with empty tags.
+		if(frameSize == 0) continue;
+		// Skipping the 0 byte as well
+		file->read();
+		consummed--;
+
+		// retriving the frame content
+		// FrameSize has already been consumed by one : the 0 byte above.
+		frameSize--;
+		char frameContent[frameSize];
+		file->read((uint8_t*)frameContent, frameSize);
+		consummed -= frameSize;
+		frameContent[frameSize] = 0;
+
+		log_d("content : %s", frameContent);
+
+		data_storeTag(frameIdentifier, frameContent);
+	}
+
+	data_storeTag("eof", "");
+	return 0;
+}
+
+
 // Populate database binary file based on SD card content.
-// callback function passed to the ID3 parser.
-void data_getFileTags(void *cbData, const char *type, bool isUnicode, const char *string){
-//	tft.print(type);tft.print(" : ");tft.println(string);
+void data_storeTag(const char* id, const char* value){
+	log_d("storing data : %s %s", id, value);
 	
-	if(type == (const char*)"Title"){
-		track->setName(string);
-	} else if(type == (const char*)"Album"){
-		track->setAlbum(string);
-	} else if(type == (const char*)"Performer"){
-		track->setArtist(string);
-	} else if(type == (const char*)"Year"){
-		track->setYear(strtol(string, NULL, 10));
-	} else if(type == (const char*)"Track"){
-		track->setTrack(strtol(string, NULL, 10));
-	} else if(type == (const char*)"Set"){
-		track->setSet(strtol(string, NULL, 10));
-	} else if(type == (const char*)"Popularimeter"){
-		track->setPop(strtol(string, NULL, 10));
-	} else if(type == (const char*)"Compilation"){
-		track->setCompilation(strtol(string, NULL, 10));
-	} else if(type == (const char*)"eof"){
+	if(strcmp(id, "TIT2") == 0){
+		track->setName(value);
+	} else if(strcmp(id, "TALB") == 0){
+		track->setAlbum(value);
+	} else if(strcmp(id, "TPE1") == 0){
+		track->setArtist(value);
+	} else if(strcmp(id, "TYER") == 0){
+		track->setYear(strtol(value, NULL, 10));
+	} else if(strcmp(id, "TRCK") == 0){
+		track->setTrack(strtol(value, NULL, 10));
+	} else if(strcmp(id, "TPOS") == 0){
+		track->setSet(strtol(value, NULL, 10));
+	} else if(strcmp(id, "POPM") == 0){
+		track->setPop(strtol(value, NULL, 10));
+	} else if(strcmp(id, "TCMP") == 0){
+		track->setCompilation(strtol(value, NULL, 10));
+	} else if(strcmp(id, "eof") == 0){
 		tagEOF = true;
 	}
 

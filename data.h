@@ -19,7 +19,9 @@ void data_clearDB(void*);
 
 void data_getTrackLength(fs::File *file, AudioTrackData *track);
 
-void data_getFileTags(void *cbData, const char *type, bool isUnicode, const char *string);
+bool data_getTagMp3(fs::File* file);
+
+void data_storeTag(const char *id, const char *value);
 /*
 theme_t* data_getTheme(theme_t *theme);
 void data_updateTheme(const char *name);

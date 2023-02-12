@@ -48,6 +48,4 @@ void audio_unmute();
 
 audioState_t audio_getState();
 
-bool audio_getTag(fs::File *file);
-
 #endif
