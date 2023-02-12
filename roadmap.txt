@@ -8,12 +8,17 @@ ok			Listing files on drive
 
 			Checking existing files against database.
 				checking listed files still exist
-wop				checking for new files 								// ok, but needs a way to do it without parsing the whole filesystem !
-ok				Breaking the XML database into smaller chunks 		// each AudioTrackData object is saved as raw bytes to SD card.	
+wop				checking for new files
+ 								Problem : a directory is marked as changed only if one of its file has changed. it doesn't do it recursively.
+ 								So if the file system has the same arborescens as the music library, one needs to parse all of it each time.
+								One way may be to use the same "database" folder system as on iPods : several folders (iPod have 50),
+								where files are stored randomly on upload, so there is only those folders to check for modifications.
+ok				Breaking the XML database into smaller chunks 		// each AudioTrackData object is saved as raw bytes to SD card.
+			There is a dead bug (rebooting in loop) when a binary database file is empty. Integrity of those data must be checked.
 
 wop			Create a player GUI										// lacks album art.
 
-wop			See how to make updates automatic. 						// use last write time on folders, but it's not recursive
+wop			See how to make updates automatic. 						// use last write time on folders, but it's not recursive. See above.
 
 wop			Implementing touch wheel
 				done, but needs tweaking as it's pretty instable for now.

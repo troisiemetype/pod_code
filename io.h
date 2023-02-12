@@ -15,6 +15,7 @@ void io_initButtons();
 void io_initWheel();
 
 void io_update();
+void io_data();
 
 void io_updateButtons();
 void io_updateReadButtons();

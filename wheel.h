@@ -11,6 +11,7 @@ public:
 	void init();
 
 	void setSteps(uint8_t steps);
+	void reverse();
 
 	void tuneBaseline(uint8_t cycles = 16);
 	void tuneThreshold(uint8_t cycles = 16);
@@ -52,6 +53,7 @@ private:
 	int8_t _stepCounter;
 
 	uint8_t _steps;
+	bool _invert;
 
 	uint16_t _thresholdRising;
 	uint16_t _thresholdFalling;

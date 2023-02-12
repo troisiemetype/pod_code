@@ -8,6 +8,22 @@ void sandbox(){
 	for(;;);
 }
 
+
+void audioLoop(void *params){
+	TickType_t last;
+	last = xTaskGetTickCount();
+	const TickType_t freq = 1 / portTICK_PERIOD_MS;
+	for(;;){
+//		Serial.println("al");
+		audio_update();
+		vTaskDelayUntil(&last, freq);
+	}
+}
+
+void displayLoop(void *params){
+	
+}
+
 void setup(){
 
 	Serial.begin(115200);
@@ -22,7 +38,7 @@ void setup(){
 //	log_d("Free PSRAM: %d", ESP.getFreePsram());
 	hw_init();
 	io_init();
-	scanWire();
+//	util_scanI2C();
 
 	log_d("io init'd.");
 	log_d("Free heap: %d", ESP.getFreeHeap());
@@ -80,35 +96,4 @@ void setup(){
 void loop(){
 	io_update();
 	display_update();
-}
-
-void audioLoop(void *params){
-	TickType_t last;
-	last = xTaskGetTickCount();
-	const TickType_t freq = 1 / portTICK_PERIOD_MS;
-	for(;;){
-//		Serial.println("al");
-		audio_update();
-		vTaskDelayUntil(&last, freq);
-	}
-}
-
-void displayLoop(void *params){
-	
-}
-
-void scanWire(){
-	Wire.begin();
-
-	Serial.println("start scanning I2C");
-	for(uint8_t i = 0; i < 128; ++i){
-		Wire.beginTransmission(i);
-		if(Wire.endTransmission() == 0){
-			Serial.print("Device at address: ");
-		}
-
-		Serial.printf("%i\t%20X\n", i, i);
-	}
-	Serial.println();
-
 }

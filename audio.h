@@ -14,6 +14,16 @@
 
 #define AUDIO_BUFFER_SIZE				29192
 
+enum audioState_t{
+	AUDIO_IDLE = 0,
+	AUDIO_PARSING_TAGS,
+	AUDIO_PLAY,
+	AUDIO_MUTING,
+	AUDIO_MUTE,
+	AUDIO_UNMUTING,
+	AUDIO_STOPPING,
+};
+
 void audio_init();
 
 bool audio_update();
@@ -32,6 +42,8 @@ void audio_pause();
 void audio_muteThread(void *params);
 void audio_mute();
 void audio_unmute();
+
+audioState_t audio_getState();
 
 bool audio_getTag(fs::File *file);
 

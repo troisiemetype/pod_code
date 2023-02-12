@@ -1,6 +1,8 @@
 // #include "io.h"
 #include "esPod.h"
 
+#include "Ticker.h"
+
 const uint8_t NB_BUTTONS = 5;
 /*
 const uint8_t BTN_CENTER = 0;
@@ -9,12 +11,12 @@ const uint8_t BTN_RIGHT = 36;
 const uint8_t BTN_DOWN = 35;
 const uint8_t BTN_LEFT = 39;
 */
-const uint8_t WHEEL_0 = 33;
-const uint8_t WHEEL_1 = 32;
-const uint8_t WHEEL_2 = 27;
-const uint8_t WHEEL_3 = 4;
-const uint8_t WHEEL_4 = 12;
-const uint8_t WHEEL_5 = 13;
+const uint8_t WHEEL_0 = 4;
+const uint8_t WHEEL_1 = 13;
+const uint8_t WHEEL_2 = 12;
+const uint8_t WHEEL_3 = 27;
+const uint8_t WHEEL_4 = 32;
+const uint8_t WHEEL_5 = 33;
 
 const uint8_t BATTERY_LEVEL = 34;
 const uint8_t BATTERY_STAT = 36; // SenVP
@@ -42,13 +44,19 @@ uint32_t _timerWheelUpdate = 0;
 const uint16_t WHEEL_UPDATE = 2;
 
 uint32_t cnt = 0;
-
+/*
 uint16_t batLevel = 0;
 bool batStat = 0;
-
+*/
 TCA9534 ioExp = TCA9534();
 
+uint16_t touch = 0;
+uint16_t minTouch = 0;
+uint16_t maxTouch = 0;
+
 volatile bool ioInt = 0;
+
+//Ticker sendData;
 
 void io_init(){
 	io_initIO();
@@ -60,8 +68,18 @@ void io_init(){
 	// sleep is the time sleeping before starting measure ? "sleep cycles for timer"
 	touchSetCycles(0x1000, 0x1000);
 
-	wheel.init();
+ 	wheel.init();
 	wheel.setSteps(16);
+//	wheel.reverse();
+//	for(uint8_t i = 0; i < 16; ++i)	touch = minTouch = maxTouch = touchRead(WHEEL_0);
+
+//	sendData.attach(0.5, io_data);
+}
+
+void io_data(){
+	Serial.printf("touch\t: %i\n", touch);
+	Serial.printf("min touch : %i\n", minTouch);
+	Serial.printf("max touch : %i\n\n", maxTouch);
 }
 
 void io_initIO(){
@@ -84,6 +102,8 @@ void io_initPortExpander(){
 	// The first two (MSB) bits are not used, an set as output so they are not floating and triggering interrupts.
 	// The third (bit 5) is the amplifier enable.
 	ioExp.setDirection(0b00011111);
+	ioExp.setPin(5, 1);
+	ioExp.updateOutput();
 }
 
 void io_initButtons(){
@@ -111,13 +131,17 @@ void io_update(){
 //	cnt = millis();
 	io_updateButtons();
 //	log_d("buttons update : %i", (millis() - cnt));
-
-	io_updateBattery();
+/*
+	touch = touchRead(WHEEL_0);
+	if(touch < minTouch) minTouch = touch;
+	if(touch > maxTouch) maxTouch = touch;
+*/
 	// temp return for letting touch aside.
-	return;
+//	return;
 
 	if(wheel.update()){
-
+		hw_setBacklight(192);
+		hw_startDelayDiming();
 		int8_t steps = wheel.getStep();
 		if(steps > 0){
 			_io_cbWheelClockwise();
@@ -134,15 +158,17 @@ void io_update(){
 // TODO : need to find a way to either buffer data, or speedup buttons !
 void io_updateButtons(){
 //	Serial.print("io :");
-	if(ioInt){
-		ioExp.updateInput();
+	if(ioInt && ioExp.updateInput()){
+//		ioExp.updateInput();
 		ioInt = 0;
+//		False int due to unknown reason !
 		hw_setBacklight(192);
 	}
 	for(uint8_t i = 0; i < NB_BUTTONS; ++i){
 //		Serial.printf("%i", ioExp.getPin(buttonBit[i]));
 //		state |= (button[i].update() << i);
 		if(button[i].update(ioExp.getPin(buttonBit[i]))){
+//			hw_setBacklight(192);
 			hw_startDelayDiming();
 			if(button[i].isLongPressed()){
 				switch(i){
@@ -187,6 +213,8 @@ void io_updateButtons(){
 	return;
 }
 
+// called by an interrupt in main loop.
+// Maybe the interrupt should be called from io_, or from hw_.
 void io_updateReadButtons(){
 	ioInt = 1;
 }
@@ -196,14 +224,17 @@ void io_updateWheel(){
 
 }
 
+// To be moved to hardware
 void io_updateBattery(){
 //	batStat = digitalRead(BATTERY_STAT);
 //	batLevel = analogRead(BATTERY_LEVEL);
+/*
 	if((millis() - cnt) > 1000){
 		cnt = millis();
 		if(++batLevel > 4095) batLevel = 0;
 		display_pushBattery((float)batLevel / 4095);
 	}
+*/
 }
 
 void io_deattachAllCB(){

@@ -1,0 +1,14 @@
+Correction for the second boards :
+The S/Pdif led coupled with boot button doesn't work !
+Change the display backlight mosfet to an available pinout ! (GSD)
+IO 39 doesn't have internal pullups, so one external must be added for TCA9534 /INT pin.
+Add big decoupling capacitors on 3.3V ; there is often a reset when USB plugs / unplugs.
+
+Add a >4.7uF capacitor between Vbat of MCP73831 and GND.
+MCP73831 should be changed to 2x3 DFN for better thermal regulation. Or see if there are other solutions.
+Also set a better ground plane with more vias for heat dissipation.
+Beware !! Stat on MCP73831 is driven HIGH when battery is fully charged, which is VDD level, i.e. 5V usb. So there is a great risk to damage at least the input pin, or even the esp !!
+
+Change global size and screen orientation.
+
+Tied unused pins of TCA9534 port expander to ground !

@@ -35,7 +35,7 @@
 	Battery test
 		Any of the ADC pins
 
-pin list
+pin list		* : analog pin
 
 0 *		btn center				IO expander 0		SPDIF out
 1			TX debug output at boot					USB

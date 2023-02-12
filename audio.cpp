@@ -12,15 +12,7 @@ const uint8_t I2S_CLK = 5;
 const uint8_t I2S_DATA = 17;
 const uint8_t I2S_WS = 16;
 
-enum audioState_t{
-	AUDIO_IDLE = 0,
-	AUDIO_PARSING_TAGS,
-	AUDIO_PLAY,
-	AUDIO_MUTING,
-	AUDIO_MUTE,
-	AUDIO_UNMUTING,
-	AUDIO_STOPPING,
-} audioState = AUDIO_IDLE;
+audioState_t audioState = AUDIO_IDLE;
 
 AudioTrackData *current = NULL;
 MenuItem *currentItem = NULL;
@@ -54,9 +46,13 @@ void audio_init(){
 
 	audioState = AUDIO_IDLE;
 
+//	Todo : change the audio update to 1 second.
+//	or, better : change it to some value that will give a smooth progress bar whatever the size of the track.
+//	But 1ms is clearlry a waste of processor ressource !
 	audioTimer = timerBegin(0, 80, true);
 	timerAttachInterrupt(audioTimer, &audio_int, true);
 	timerAlarmWrite(audioTimer, 1000, true);
+
 //	timerAlarmEnable(audioTimer);
 
 }
@@ -113,7 +109,8 @@ void audio_playTrack(MenuItem *item){
 		// todo : stopping and changing file make the player reboot.
 //		player->stop();
 //		player = new AudioGeneratorMP3();
-		*audioTags = AudioFileSourceID3(audioFile, true);
+//		*audioTags = AudioFileSourceID3(audioFile, true);			// can't remember why I had this constructor modified...
+		*audioTags = AudioFileSourceID3(audioFile);
 		playing = player->begin(audioTags, audioOutput);
 		audioOutput->SetGain(MAX_AUDIO_GAIN);
 //		Serial.printf("playing %s : %i\n", current->getName(), playing);
@@ -158,7 +155,13 @@ void audio_updateDisplay(){
 
 void audio_nextTrack(){
 	MenuItem *item = currentItem->getNext();
-	if(!item) return;
+	if(!item){
+//		menu_update();
+//		MenuList *parent = currentItem->getParent();
+//		parent->getFirst();
+//		menu_cbList(parent);
+		return;
+	}
 
 //	AudioTrackData *newTrack = reinterpret_cast<AudioTrackData*>(item->getData());
 
@@ -241,9 +244,21 @@ void audio_unmute(){
 	}
 }
 
-bool audio_getTag(fs::File* file){
+audioState_t audio_getState(){
+	return audioState;
+}
 
-	audioFile->open(file->name());
+bool audio_getTag(fs::File* file){
+/*
+	char *name = (char*)calloc(128, sizeof(char));
+	*name = '/';
+	strcat(name, file->name());
+
+	audioFile->open(name);
+*/
+
+	audioFile->open(file->path());
+//	audioFile->open(file->name());
 	/*	if(audioTags == NULL){
 		audioTags = new AudioFileSourceID3(audioFile);
 	} else {

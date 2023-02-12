@@ -17,6 +17,7 @@
 
 // #define INCLUDE_vTaskDelayUntil		1
 
+#include "util.h"
 #include "hardware.h"
 #include "AudioTrackData.h"
 #include "io.h"

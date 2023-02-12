@@ -56,6 +56,7 @@ bool menu_hasSong(const char *filename){
 // Create main menu, call subroutines to parse levels.
 void menu_makeMenu(){
 //	tft.println("creating menu");
+	log_d("creating menu");
 
 	maxMenuItem = display_getMaxMenuItem();
 
@@ -137,6 +138,7 @@ void menu_makeMenu(){
 }
 
 bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
+	log_d("creating and sorting music menu");
 //	Serial.println("//////////////////////// unsorted ////////////////////////");
 //	menu_utilDisplayList(ref);
 //	Serial.println("//////////////////////// sorting by name ////////////////////////");
@@ -152,8 +154,15 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 	ref->sortExternal(menu_sortByArtist);
 //	menu_utilDisplayList(ref);
 //	Serial.println("sorted");
+
 	MenuItem *lastItem = ref->getLast();
 	MenuItem *item = ref->getFirst();
+
+	if(item == NULL){
+		log_d("no song in database, aborting");
+		return false;
+	}
+
 	MenuList *listArtists = NULL;
 	MenuList *listArtistsAlbums = NULL;
 	MenuList *listAlbums = NULL;
@@ -373,14 +382,18 @@ void menu_cbTest(void *empty){
 }
 
 // The callback function to be attached to MenuList objects, when selecting them.
-void menu_cbList(void* list){
+void menu_cbList(void *list){
+	log_d("creating menu callbacks");
+	if(!list) return;
 	io_deattachAllCB();
-//	io_attachCBWheelClockwise(menu_next);
-//	io_attachCBWheelCounterClockwise(menu_prev);
-	io_attachCBUp(menu_prev);
-	io_attachCBDown(menu_next);
-	io_attachCBRight(menu_enter);
+	io_attachCBWheelClockwise(menu_next);
+	io_attachCBWheelCounterClockwise(menu_prev);
+//	io_attachCBUp(menu_prev);
+//	io_attachCBDown(menu_next);
+	io_attachCBEnter(menu_enter);
 	io_attachCBLeft(menu_exit);
+
+	display_setState(MENU);
 
 	menu = (MenuList*)list;
 	menu_write(menu);

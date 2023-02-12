@@ -21,33 +21,19 @@ uint32_t totalSize = 0;
 bool tagEOF = false;
 
 /*
- * TODO : xml files quickly take a tremendous amount of space on the heap, so the database system must be rewritten
- *
- *		First check every sub-folder fo music.
- *			Compare the last modification date of folders against the one present in database.
- *
- *
- * 			One main database, listing sub-databases.
- * 			sub-database list files, up until it reaches a max size (lets say around 32)
- *			We then need to has a main function that :
- *				Open the database
- *				Loop into the sub-databases
- *					Open the sub-database
- *					gather songs info for menu and player
- * 					close the sub database.
- *					check for new songs
- * 					check for deleted songs
- */
-
-/*
- *	The solution to XML file size would maybe simply be to have a data file for every song file,
- *	in which the AudioTrackData object is saved.
- *		On startup, open the folder containing those object-files.
- *		check if the file still exists.
+ *	After having tried to use XML files, both on SD card for long term memory and internally for programm runtime,
+ *	another solution has been adopted :
+ *	For every song in the data base, there is small binary file which sumarizes the file :
+ *		- Info needed for the menu, and
+ *		- path to the file itself.
+ *	(note : iPod uses something similar, excpet that all this informations are stored in ONE binary file which is parsed at startup)
+ *	Those binary files are handle like that :
+ *		On startup, open the folder containing those binary files.
+ *		check if the audio file still exists in database, then :
  *			Add it to the running data, or
  *			erase it from the data.
  *		Check for new files.
- *			Create a new object-file if needed, add it to the running data.
+ *			Create a new binary file if needed, add it to the running data.
  */
 
 void data_init(){
@@ -61,22 +47,29 @@ void data_init(){
 }
 
 void data_readDatabase(fs::File *dir){
+	log_d("reading database");
 	for(;;){
 		fs::File file = dir->openNextFile();
 		if(!file) break;
+		log_d("next file : %s", file.name());
 
 		track = new AudioTrackData();
 		data_readAudioTrackData(&file, track);
+
+		log_d("\t reading DB : %s", track->getFilename());
 		// check if the file still exists in /music
 		if(SD_MMC.exists(track->getFilename())){
 			// if it exists, push it to menu.
+			log_d("\tpush track to menu");
+
 			menu_pushSong(track);
 			file.close();
 		} else {
 			// If it doesn't, we delete the entry in database, and the track info just created.
 			delete track;
+			log_d("\tno audio file in DB for this entry, removing it.");
 			file.close();
-			SD_MMC.remove(file.name());
+			SD_MMC.remove(file.path());
 		}
 	}
 }
@@ -88,13 +81,14 @@ void data_checkNewFiles(){
 
 // Parse folder /music/, to recursively list every audio file on the SD card.
 void data_parseFolder(fs::File *folder, uint8_t lvl){
-
+	log_d("\tparsing folder %s", folder->name());
 	++lvl;
 	for(;;){
 		fs::File file = folder->openNextFile();
 		if(!file){
 			break;
 		}
+//		log_d("new file : %s", file.name());
 		if(file.isDirectory()){
 			// Recursively dive into every folder we find.
 			data_parseFolder(&file, lvl);
@@ -109,23 +103,32 @@ void data_parseFolder(fs::File *folder, uint8_t lvl){
 void data_checkSong(fs::File *file){
 	// Get filename, then extract extension to check for file validity
 	// We only (for now i hope) want to deal with mp3 files.
-	const char *name = file->name();
-	const char *ext = strrchr(name, '.');
+//	char *name = (char*)malloc(sizeof(char) * strlen(file->name()) + 1);
+//	*name = '/';
+//	strcat(name, file->name());
+/*
+	char *name = (char*)calloc(128, sizeof(char));
+	*name = '/';
+	strcat(name, file->name());
+	log_d("name : %s", name);
+*/
+	const char *path = file->path();
+	const char *ext = strrchr(path, '.');
 
-	Serial.printf("file %s ; extension %s\n", name, ext);
+//	log_d("file %s ; extension %s", name, ext);
 	if(strcmp(ext, ".mp3") != 0) return;
 
 	// We check if menu has already this song (which has already been loaded from database)
-	if(menu_hasSong(name)) return;
+	if(menu_hasSong(path)) return;
 
 //	log_d("getting tag");
-	Serial.printf("getting tags for  %s\n", name);
+	log_d("getting tags for  %s", path);
 	if(audio_getTag(file)){
 		tagEOF = false;
 		totalSize += file->size();
 
 		track = new AudioTrackData();
-		track->setFilename(name);
+		track->setFilename(path);
 
 		while(!tagEOF){
 			player->loop();
@@ -141,7 +144,7 @@ void data_checkSong(fs::File *file){
 }
 
 void data_readAudioTrackData(fs::File *file, AudioTrackData *track){
-//	Serial.printf("read data from %s\n", file->name());
+	log_d("read data from %s", file->name());
 	// make a clone copy of the file, byte fo byte, to the AudioTrackData instance.
 	file->read((uint8_t*)track, sizeof(AudioTrackData) / sizeof(uint8_t));
 

@@ -1,0 +1,49 @@
+// Setup heap using XML database
+
+[D][esPod.ino:18] setup(): Total heap: 376332
+[D][esPod.ino:19] setup(): Free heap: 345264
+[D][esPod.ino:20] setup(): Total PSRAM: 0
+[D][esPod.ino:21] setup(): Free PSRAM: 0
+[D][esPod.ino:40] setup(): Total heap: 375552
+[D][esPod.ino:41] setup(): Free heap: 285876
+[D][data.cpp:199] data_checkSong(): getting tag
+unsupported file
+[D][data.cpp:199] data_checkSong(): getting tag
+unsupported file
+[D][data.cpp:199] data_checkSong(): getting tag
+unsupported file
+[D][data.cpp:199] data_checkSong(): getting tag
+unsupported file
+[D][data.cpp:199] data_checkSong(): getting tag
+unsupported file
+[D][data.cpp:199] data_checkSong(): getting tag
+unsupported file
+[D][esPod.ino:48] setup(): Total heap: 358828
+[D][esPod.ino:49] setup(): Free heap: 87160
+[D][esPod.ino:53] setup(): Total heap: 359436
+[D][esPod.ino:54] setup(): Free heap: 245608
+
+// Setup heap using database made from individual AudiotrackData objects saved to SD.
+
+[D][esPod.ino:18] setup(): Total heap: 376396
+[D][esPod.ino:19] setup(): Free heap: 345328
+[D][esPod.ino:50] setup(): Total heap: 359920
+[D][esPod.ino:51] setup(): Free heap: 252752
+[D][esPod.ino:56] setup(): Total heap: 353844
+[D][esPod.ino:57] setup(): Free heap: 238380
++0 0x3ffb1e08
+playing Bloodless : 1
+[D][audio.cpp:113] audio_playTrack(): Free heap: 194860
+
+// Setup heap with database parsed but not load into AudioTrackData instances. (but with menu crashing when sorting and coyping
+// Because not modified yet.)
+
+[D][esPod.ino:18] setup(): Total heap: 376344
+[D][esPod.ino:19] setup(): Free heap: 350224
+read data from /system/data/DB/0000
+push to menu : Bloodless
+...
+[D][esPod.ino:50] setup(): Total heap: 365472
+[D][esPod.ino:51] setup(): Free heap: 264152
+
+

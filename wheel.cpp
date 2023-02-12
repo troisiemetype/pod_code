@@ -28,7 +28,7 @@ void TouchWheel::init(){
 	_timeFalling = 100;
 	_timeTouching = 10000;
 
-	_filterWeight = 30;
+	_filterWeight = 20;
 
 	_steps = 255;
 
@@ -41,6 +41,9 @@ void TouchWheel::setSteps(uint8_t steps){
 	_steps = steps;
 }
 
+void TouchWheel::reverse(){
+	_invert ^= 1;
+}
 
 void TouchWheel::tuneBaseline(uint8_t cycles){
 	_baseline[0] = 0;
@@ -103,8 +106,8 @@ void TouchWheel::tuneThreshold(uint8_t cycles){
 	_thresholdRising = (float)delta * 0.4;
 	_thresholdFalling = (float)delta * 0.4;
 */
-	_thresholdRising = 6;
-	_thresholdFalling = 7;
+	_thresholdRising = 18;
+	_thresholdFalling = 22;
 
 /*
 	Serial.printf("max delta :\t%i\n", delta);
@@ -234,6 +237,7 @@ bool TouchWheel::update(){
 	int8_t steps = _pos - _prevPos;
 
 	_step = steps;
+	if(_invert) _step = 0 - _step;
 
 //	Serial.printf("\tposition : %i\n", _pos);
 //	Serial.printf("\tstep : %i\n", _step);
