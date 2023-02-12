@@ -140,7 +140,7 @@ void io_update(){
 //	return;
 
 	if(wheel.update()){
-		hw_setBacklight(192);
+//		hw_setBacklight(192);
 		hw_startDelayDiming();
 		int8_t steps = wheel.getStep();
 		if(steps > 0){

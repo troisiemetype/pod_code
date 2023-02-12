@@ -21,6 +21,13 @@ void audioLoop(void *params){
 }
 
 void displayLoop(void *params){
+	TickType_t last;
+	last = xTaskGetTickCount();
+	const TickType_t freq = 10 / portTICK_PERIOD_MS;
+	for(;;){
+		display_update();
+		vTaskDelayUntil(&last, freq);
+	}
 	
 }
 
@@ -44,6 +51,10 @@ void setup(){
 	log_d("Free heap: %d", ESP.getFreeHeap());
 
 	display_init();
+
+	tft.println("Starting...");
+
+
 	log_d("display init'd.");
 	log_d("Free heap: %d", ESP.getFreeHeap());
 
@@ -88,9 +99,11 @@ void setup(){
 	log_d("Total heap: %d", ESP.getHeapSize());
 	log_d("Free heap: %d", ESP.getFreeHeap());
 
-//	xTaskCreatePinnedToCore(audioLoop, "audioLoop", 10000, NULL, 1, NULL, 0);
+
 	attachInterrupt(39, io_updateReadButtons, FALLING);
+
 	xTaskCreate(audioLoop, "audioLoop", 10000, NULL, 12, NULL);
+//	xTaskCreate(displayLoop, "displayLoop", 10000, NULL, 11, NULL);
 }
 
 void loop(){

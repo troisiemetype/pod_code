@@ -191,6 +191,7 @@ void display_setTheme(theme_t newTheme){
 
 void display_update(){
 	if(tft.dmaBusy()) return;
+//	log_d("updating display");
 
 	tft.startWrite();
 	_display_consumeBuffer();

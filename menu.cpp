@@ -32,11 +32,11 @@ void menu_pushSong(AudioTrackData *song){
 //	Serial.printf("push to menu : %s\n", song->getName());
 	MenuItem *songEntry = new MenuItem();
 
+	// We attach the callback function to the song, passing a pointer to itself, so Audio can acces it and its neighbours.
 	songEntry->attachCallback(menu_cbSong, reinterpret_cast<void*>(songEntry));
 	songEntry->attachData(reinterpret_cast<void*>(song));
 	songEntry->attachName(song->getName());
 	songs->addChild(songEntry);
-
 }
 
 // Check that song has already been added.
@@ -130,6 +130,11 @@ void menu_makeMenu(){
 	test->attachCallback(menu_cbTest, NULL);
 	test->setName("test");
 	menu->addChild(test);
+
+	MenuItem *clearDB = new MenuItem();
+	test->attachCallback(data_clearDB, NULL);
+	test->setName("clear database");
+	menu->addChild(clearDB);
 
 	menu_createMusic(artists, albums, songs);
 
@@ -399,9 +404,11 @@ void menu_cbList(void *list){
 	menu_write(menu);
 }
 
-// The callback function to be attached to MenuItem objects, when selecting them.
+// The callback function to be attached to MenuItem song objects, when selecting them.
 void menu_cbSong(void *data){
 //	tft.print("song called");
+	// We send the MenuItem to audio. There will be extracetd from it the audio file information.
+	// Next and previous track will then be acccessible.
 	MenuItem *item = reinterpret_cast<MenuItem*>(data);
 
 	audio_playTrack(item);

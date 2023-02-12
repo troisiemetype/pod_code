@@ -109,6 +109,7 @@ void _hw_taskBacklight(void *param){
 			blLevel = value;
 			blChanging = false;
 //			taskStackSize = uxTaskGetStackHighWaterMark(NULL)
+			log_d("backlight leveled, killing dim task");
 			vTaskDelete(NULL);
 			break;
 		}

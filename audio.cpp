@@ -87,6 +87,7 @@ bool audio_update(){
 	return false;
 }
 
+// Todo : add semaphore so audio_update() doesn't access audioCounter when it's being modified.
 void audio_int(){
 	if(audioState == AUDIO_PLAY || audioState == AUDIO_MUTING || audioState == AUDIO_UNMUTING){
 		audioCounter++;
@@ -105,13 +106,22 @@ void audio_playTrack(MenuItem *item){
 
 //		playing = 0;
 //		audioFile->close();
+		log_d("open %s for playing", current->getFilename());
 		audioFile->open(current->getFilename());
+//		log_d("file opened");
 		// todo : stopping and changing file make the player reboot.
 //		player->stop();
 //		player = new AudioGeneratorMP3();
-//		*audioTags = AudioFileSourceID3(audioFile, true);			// can't remember why I had this constructor modified...
-		*audioTags = AudioFileSourceID3(audioFile);
+		// Modified constructor whit checked member set to true, to skip ID3 parsing.
+		*audioTags = AudioFileSourceID3(audioFile, true);
+//		log_d("add file");
+//		*audioTags = AudioFileSourceID3(audioFile);
+//		log_d("bit per channel : %i", audioOutput->SetBitsPerSample(16));
+//		log_d("channels : %i", audioOutput->SetChannels(2));
+//		log_d("begin : %i", audioOutput->begin());
+
 		playing = player->begin(audioTags, audioOutput);
+//		log_d("now playing");
 		audioOutput->SetGain(MAX_AUDIO_GAIN);
 //		Serial.printf("playing %s : %i\n", current->getName(), playing);
 //		log_d("Free heap: %d", ESP.getFreeHeap());

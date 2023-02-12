@@ -6,11 +6,12 @@ AudioTrackData::AudioTrackData(){
 	_album = NULL;
 	_artist = NULL;
 	_filename = NULL;
-
+/*
 	allocateChar("\0", &_name);
 	allocateChar("\0", &_album);
 	allocateChar("\0", &_artist);
 	allocateChar("\0", &_filename);
+*/
 }
 
 AudioTrackData::~AudioTrackData(){

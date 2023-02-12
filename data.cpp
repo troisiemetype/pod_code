@@ -57,18 +57,20 @@ void data_readDatabase(fs::File *dir){
 		data_readAudioTrackData(&file, track);
 
 		log_d("\t reading DB : %s", track->getFilename());
+
 		// check if the file still exists in /music
 		if(SD_MMC.exists(track->getFilename())){
 			// if it exists, push it to menu.
 			log_d("\tpush track to menu");
 
 			menu_pushSong(track);
-			file.close();
+//			file.close();
 		} else {
 			// If it doesn't, we delete the entry in database, and the track info just created.
 			delete track;
 			log_d("\tno audio file in DB for this entry, removing it.");
-			file.close();
+			// file.path() doesn't exist once the file has been closed.
+//			file.close();
 			SD_MMC.remove(file.path());
 		}
 	}
@@ -145,7 +147,7 @@ void data_checkSong(fs::File *file){
 
 void data_readAudioTrackData(fs::File *file, AudioTrackData *track){
 	log_d("read data from %s", file->name());
-	// make a clone copy of the file, byte fo byte, to the AudioTrackData instance.
+	// make a clone copy of the file, byte for byte, to the AudioTrackData instance.
 	file->read((uint8_t*)track, sizeof(AudioTrackData) / sizeof(uint8_t));
 
 	// then copy the values for name, artist, album and filename, that are appended at the end of the file.
@@ -209,8 +211,22 @@ void data_writeAudioTrackData(AudioTrackData *track){
 	b += file.write((uint8_t*)track->getAlbum(), strlen(track->getAlbum()) + 1);
 	b += file.write((uint8_t*)track->getFilename(), strlen(track->getFilename()) + 1);
 
-//	Serial.printf("%i bytes written to file %s\n", b, dbName);
+
+	log_d("%i bytes written to file %s\n", b, dbName);
 }
+
+void data_clearDB(void *empty){
+	fs::File database = SD_MMC.open(dbDir);
+	for(;;){
+		fs::File file = database.openNextFile();
+		if(!file) break;
+
+		log_d("suppressing file %s", file.name());
+		SD_MMC.remove(file.path());
+	}
+	database.close();
+}
+
 
 void data_getTrackLength(fs::File *file, AudioTrackData *track){
 	Serial.printf("getting length from %s\n", file->name());
@@ -229,7 +245,7 @@ void data_getTrackLength(fs::File *file, AudioTrackData *track){
 	Serial.printf("%i frames / %ims\n", size, size * 26);
 }
 
-// Populate XML based on SD card content.
+// Populate database binary file based on SD card content.
 // callback function passed to the ID3 parser.
 void data_getFileTags(void *cbData, const char *type, bool isUnicode, const char *string){
 //	tft.print(type);tft.print(" : ");tft.println(string);
@@ -252,9 +268,58 @@ void data_getFileTags(void *cbData, const char *type, bool isUnicode, const char
 		track->setCompilation(strtol(string, NULL, 10));
 	} else if(type == (const char*)"eof"){
 		tagEOF = true;
-		return;
+	}
+
+
+	// here we populate the artist, album and name if they were not in the tag.
+	// Not sure if it's better to do it here, or during the parsing of database.
+	if(tagEOF){
+//		log_d("tag parsed");
+//		log_d("name : %s", track->getName());
+//		log_d("artist : %s", track->getArtist());
+//		log_d("album : %s", track->getAlbum());
+//		log_d("name : %x", *track->getName());
+//		log_d("artist : %x", *track->getArtist());
+//		log_d("album : %x", *track->getAlbum());
+
+//		if(track->getName() == (const char*)""){
+		if(track->getName() == NULL){
+
+			log_d("file has no name");
+
+			const char *filename = (track->getFilename());
+			char *name = (char*)malloc(strlen(filename));
+			if(name == NULL) return;
+
+			memcpy(name, filename, strlen(filename));
+			name = strrchr(name, '/');
+			const char *ext = strrchr(name, '.');
+			memmove(name, (name + 1), (strlen(name) - strlen(ext) - 1));
+			*(name + (strlen(name) - strlen(ext) - 1)) = '\0';
+
+			log_d("name : %s", name);
+			track->setName(name);
+
+			// free(name) makes esp reboot.See Why (There was the same problem when dealing with memory freeing in linked classes)
+//			free(name);
+			
+		}
+
+//		if(track->getAlbum() == (const char*)""){
+		if(track->getAlbum() == NULL){
+
+//			log_d("file has no album");
+			track->setAlbum("unknown album");
+		}
+
+//		if(track->getArtist() == (const char*)""){
+		if(track->getArtist() == NULL){
+//			log_d("file has no artist");
+			track->setArtist("unknown artist");
+		}
 	}
 }
+
 
 /*
 theme_t* data_getTheme(theme_t *theme){
