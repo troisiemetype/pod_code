@@ -1,10 +1,7 @@
 // #include "audio.h"
 #include "esPod.h"
 
-AudioFileSourceID3 *audioTags;
-AudioFileSourceFS *audioFile;
-AudioGenerator *player;
-AudioOutputI2S *audioOutput;
+Audio audio;
 
 //int8_t audioBuffer[AUDIO_BUFFER_SIZE];
 
@@ -30,17 +27,15 @@ hw_timer_t *audioTimer = NULL;
 volatile uint32_t audioCounter = 0;
 uint32_t prevAudioCounter = 0;
 volatile bool audioCounterFlag = false;
-float audioGain = 1.0;
-const float MAX_AUDIO_GAIN = 0.9;
+uint8_t audioGain = 63;
+const uint8_t MAX_AUDIO_GAIN = 63;
 uint16_t muteDelay = 50;						// The time wanted for mute / unmute, in milliseconds
 
 void audio_init(){
-	audioOutput = new AudioOutputI2S();
-	audioOutput->SetPinout(I2S_CLK, I2S_WS, I2S_DATA);
-	audioFile = new AudioFileSourceFS(SD_MMC);
-	audioTags = new AudioFileSourceID3(audioFile);
-//	player = new AudioGeneratorMP3(audioBuffer, AUDIO_BUFFER_SIZE);
-	player = new AudioGeneratorMP3();
+
+	audio.setPinout(I2S_CLK, I2S_WS, I2S_DATA);
+	audio.setVolumeSteps(MAX_AUDIO_GAIN);
+	audio.setVolume(MAX_AUDIO_GAIN);
 
 	audioUpdateMutex = xSemaphoreCreateMutex();
 
@@ -61,7 +56,7 @@ bool audio_update(){
 //	if(!playing) return false;
 	if(audioState == AUDIO_PLAY || audioState == AUDIO_MUTING || audioState == AUDIO_UNMUTING){
 		xSemaphoreTake(audioUpdateMutex, portMAX_DELAY);
-		bool running = player->loop();
+		audio.loop();
 		xSemaphoreGive(audioUpdateMutex);
 
 		if(audioCounterFlag){
@@ -76,12 +71,12 @@ bool audio_update(){
 				prevAudioCounter = audioCounter;
 			}
 		}
-
+/*
 		if(!running){
 			audio_nextTrack();
 		}
-
-		return running;
+*/
+		return true;
 	}
 
 	return false;
@@ -104,27 +99,12 @@ void audio_playTrack(MenuItem *item){
 
 		audio_stop();
 
-//		playing = 0;
-//		audioFile->close();
 		log_d("open %s for playing", current->getFilename());
-		audioFile->open(current->getFilename());
-//		log_d("file opened");
-		// todo : stopping and changing file make the player reboot.
-//		player->stop();
-//		player = new AudioGeneratorMP3();
-		// Modified constructor whit checked member set to true, to skip ID3 parsing.
-		*audioTags = AudioFileSourceID3(audioFile, true);
-//		log_d("add file");
-//		*audioTags = AudioFileSourceID3(audioFile);
-//		log_d("bit per channel : %i", audioOutput->SetBitsPerSample(16));
-//		log_d("channels : %i", audioOutput->SetChannels(2));
-//		log_d("begin : %i", audioOutput->begin());
 
-		playing = player->begin(audioTags, audioOutput);
-//		log_d("now playing");
-		audioOutput->SetGain(MAX_AUDIO_GAIN);
-//		Serial.printf("playing %s : %i\n", current->getName(), playing);
-//		log_d("Free heap: %d", ESP.getFreeHeap());
+		audio.connecttoFS(SD_MMC, current->getFilename());
+
+		playing = audio.isRunning();
+
 		if(playing){
 			audioState = AUDIO_PLAY;
 			audioCounter = 0;
@@ -141,8 +121,7 @@ void audio_stop(){
 	xSemaphoreTake(audioUpdateMutex, portMAX_DELAY);
 	audioState = AUDIO_IDLE;
 	playing = 0;
-	player->stop();
-	audioFile->close();
+	audio.stopSong();
 	xSemaphoreGive(audioUpdateMutex);
 }
 
@@ -200,11 +179,11 @@ void audio_pause(){
 		audioState = AUDIO_MUTING;
 	} else {
 		audioState = AUDIO_UNMUTING;
-		audioOutput->begin();
 	}
 	xTaskCreate(audio_muteThread, "audio mute", 1000, NULL, 1, NULL);
 }
 
+// Todo : the muteThread could use the soft mute function of PCM5102.
 void audio_muteThread(void *params){
 	TickType_t last;
 	last = xTaskGetTickCount();
@@ -214,28 +193,29 @@ void audio_muteThread(void *params){
 		vTaskDelayUntil(&last, freq);
 //		Serial.println(last);
 		if(audioState == AUDIO_MUTING){
-			audioGain -= MAX_AUDIO_GAIN / (float)muteDelay;
-			audioOutput->SetGain(audioGain);
+			audioGain--;
+			audio.setVolume(audioGain);
 
-			if(audioGain <= 0.0){
+			if(audioGain == 0){
 				audioState = AUDIO_MUTE;
-				audioOutput->stop();
+				audio.pauseResume();
 				vTaskDelete(NULL);
 			}
 		} else if(audioState == AUDIO_UNMUTING){
-			audioGain += MAX_AUDIO_GAIN / (float)muteDelay;
-			audioOutput->SetGain(audioGain);
+			audioGain++;
+			audio.setVolume(audioGain);
 
-			if(audioGain >= 1.0){
+			if(audioGain >= MAX_AUDIO_GAIN){
 				audioState = AUDIO_PLAY;
-//				audioOutput->begin();
+				audio.pauseResume();
 				vTaskDelete(NULL);
 			}
 		}
-
 	}
 }
 
+/*
+// replaced by mute thread
 void audio_mute(){
 	audioGain -= (MAX_AUDIO_GAIN / muteDelay);
 	audioOutput->SetGain(audioGain);
@@ -245,6 +225,7 @@ void audio_mute(){
 	}
 }
 
+// Replaced by mute thread
 void audio_unmute(){
 	audioGain += (MAX_AUDIO_GAIN / muteDelay);
 	audioOutput->SetGain(audioGain);
@@ -253,39 +234,12 @@ void audio_unmute(){
 		audioOutput->begin();
 	}
 }
-
+*/
 audioState_t audio_getState(){
 	return audioState;
 }
 
 bool audio_getTag(fs::File* file){
-/*
-	char *name = (char*)calloc(128, sizeof(char));
-	*name = '/';
-	strcat(name, file->name());
-
-	audioFile->open(name);
-*/
-
-	audioFile->open(file->path());
-//	audioFile->open(file->name());
-	/*	if(audioTags == NULL){
-		audioTags = new AudioFileSourceID3(audioFile);
-	} else {
-		*audioTags = AudioFileSourceID3(audioFile);
-	}
-	*/
-	*audioTags = AudioFileSourceID3(audioFile);
-	audioTags->RegisterMetadataCB(data_getFileTags, (void*)audioFile);
-//	log_d("beginning player ; Free heap: %d", ESP.getFreeHeap());
-	playing = player->begin(audioTags, audioOutput);
-//	log_d("player beginned ;  Free heap: %d", ESP.getFreeHeap());
-	if(playing){
-		audioState = AUDIO_PARSING_TAGS;
-	} else {
-		audioState = AUDIO_IDLE;
-	}
-	return playing;
-
-//	audioFile->close();
+	// Here we have to implement our functions.
+	return false;
 }

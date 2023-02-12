@@ -5,12 +5,15 @@
 // #include "menu.h"
 #include "esPod.h"
 // #include <FS.h>
+/*
 #include "AudioFileSource.h"
 #include "AudioFileSourceID3.h"
 #include "AudioFileSourceFS.h"
 #include "AudioGeneratorWAV.h"
 #include "AudioGeneratorMP3.h"
 #include "AudioOutputI2S.h"
+*/
+#include "Audio.h"
 
 #define AUDIO_BUFFER_SIZE				29192
 

@@ -36,7 +36,6 @@ void setup(){
 	Serial.begin(115200);
 	Serial.printf("setup running on core %i\n", xPortGetCoreID());
 
-	audioLogger = &Serial;
 	log_d("starting...");
 	log_d("Total heap: %d", ESP.getHeapSize());
 	log_d("Free heap: %d", ESP.getFreeHeap());

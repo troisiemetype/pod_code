@@ -1,8 +1,6 @@
 // #include "data.h"
 #include "esPod.h"
 
-extern 	AudioGenerator *player;
-
 const char *musicDir = "/music";
 const char *dataDir = "/system/data";
 const char *dbDir = "/system/data/DB";
@@ -123,6 +121,9 @@ void data_checkSong(fs::File *file){
 	// We check if menu has already this song (which has already been loaded from database)
 	if(menu_hasSong(path)) return;
 
+	// returning now, how we don't have the tag parser yet with this library.
+	return;
+
 //	log_d("getting tag");
 	log_d("getting tags for  %s", path);
 	if(audio_getTag(file)){
@@ -133,9 +134,9 @@ void data_checkSong(fs::File *file){
 		track->setFilename(path);
 
 		while(!tagEOF){
-			player->loop();
+
 		}
-		player->stop();
+
 //		Serial.println("song added to menu and in database.");
 //		Serial.printf("added\t%s\n", name);
 	}
