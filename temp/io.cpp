@@ -1,7 +1,5 @@
 // #include "io.h"
-#include "esPod.h"
-
-#include "Ticker.h"
+#include "piPod.h"
 
 const uint8_t NB_BUTTONS = 5;
 /*
@@ -48,15 +46,12 @@ uint32_t cnt = 0;
 uint16_t batLevel = 0;
 bool batStat = 0;
 */
-TCA9534 ioExp = TCA9534();
 
 uint16_t touch = 0;
 uint16_t minTouch = 0;
 uint16_t maxTouch = 0;
 
 volatile bool ioInt = 0;
-
-//Ticker sendData;
 
 void io_init(){
 	io_initIO();
@@ -94,16 +89,7 @@ void io_initIO(){
 }
 
 void io_initPortExpander(){
-	// TCA9534 is hardwire with its three adress pins tied to ground.
-	// Which give address 32 / 0x20.
-	// Interrupt pin is on esp's sensorVN / GPIO39
-	ioExp.begin(0, 0, 0);
-	// Every used bits are input, so direction is 1.
-	// The first two (MSB) bits are not used, an set as output so they are not floating and triggering interrupts.
-	// The third (bit 5) is the amplifier enable.
-	ioExp.setDirection(0b00011111);
-	ioExp.setPin(5, 1);
-	ioExp.updateOutput();
+
 }
 
 void io_initButtons(){
@@ -158,16 +144,12 @@ void io_update(){
 // TODO : need to find a way to either buffer data, or speedup buttons !
 void io_updateButtons(){
 //	Serial.print("io :");
-	if(ioInt && ioExp.updateInput()){
-//		ioExp.updateInput();
 		ioInt = 0;
 //		False int due to unknown reason !
 		hw_setBacklight(192);
 	}
 	for(uint8_t i = 0; i < NB_BUTTONS; ++i){
-//		Serial.printf("%i", ioExp.getPin(buttonBit[i]));
 //		state |= (button[i].update() << i);
-		if(button[i].update(ioExp.getPin(buttonBit[i]))){
 //			hw_setBacklight(192);
 			hw_startDelayDiming();
 			if(button[i].isLongPressed()){

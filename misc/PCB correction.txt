@@ -12,3 +12,10 @@ Beware !! Stat on MCP73831 is driven HIGH when battery is fully charged, which i
 Change global size and screen orientation.
 
 Tied unused pins of TCA9534 port expander to ground !
+
+
+
+hardware v1.0 (RP2040 stamp + ATTiny 1616 for buttons and touch wheel) :
+	VBUS as been put on GPIO25, which is not an ADC. Maybe we might detect VBUS presence.
+	Remove pullup for RESET button (already on RP2040 stamp) and for BOOTSEL button (not on the original Pi Pico).
+	

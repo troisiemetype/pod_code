@@ -1,7 +1,7 @@
 // #include "audio.h"
-#include "esPod.h"
+#include "piPod.h"
 
-Audio audio;
+//Audio audio;
 
 //int8_t audioBuffer[AUDIO_BUFFER_SIZE];
 
@@ -29,12 +29,12 @@ volatile uint32_t audioCounter = 0;
 uint32_t prevAudioCounter = 0;
 volatile bool audioCounterFlag = false;
 // See audio_init for info about it.
-uint8_t audioGain = 56;
-const uint8_t MAX_AUDIO_GAIN = 56;
+uint8_t audioGain = 50;
+const uint8_t MAX_AUDIO_GAIN = 50;
 uint16_t muteDelay = 50;						// The time wanted for mute / unmute, in milliseconds
 
 void audio_init(){
-
+/*
 	audio.setPinout(I2S_CLK, I2S_WS, I2S_DATA);
 	// We set MAX_AUDIO_GAIN to around 90% of max audio output : at full power, PCM5102 can make my hifi saturate.
 	audio.setVolumeSteps(64);
@@ -43,13 +43,16 @@ void audio_init(){
 	audioUpdateMutex = xSemaphoreCreateMutex();
 
 	audioState = AUDIO_IDLE;
-
+*/
 //	Todo : change the audio update to 1 second.
 //	or, better : change it to some value that will give a smooth progress bar whatever the size of the track.
 //	But 1ms is clearlry a waste of processor ressource !
+	// The timer for song duration has to be changed !
+	/*
 	audioTimer = timerBegin(0, 80, true);
 	timerAttachInterrupt(audioTimer, &audio_int, true);
 	timerAlarmWrite(audioTimer, 1000, true);
+	*/
 
 //	timerAlarmEnable(audioTimer);
 
@@ -102,14 +105,16 @@ void audio_playTrack(MenuItem *item){
 
 		audio_stop();
 
-		log_d("open %s for playing", current->getFilename());
+//		log_d("open %s for playing", current->getFilename());
 
 		audio.connecttoFS(SD_MMC, current->getFilename());
+////		log_d("duration : %i", audio.getAudioFileDuration());
 
 		playing = audio.isRunning();
 
 		if(playing){
-			audioState = AUDIO_PLAY;
+			if(audioState == AUDIO_MUTE) audio_pause();
+			else audioState = AUDIO_PLAY;
 			audioCounter = 0;
 			timerAlarmEnable(audioTimer);
 		}
@@ -130,7 +135,7 @@ void audio_stop(){
 
 void audio_updateDisplay(){
 	if(!current) return;
-//	log_d("Free heap: %d", ESP.getFreeHeap());
+////	log_d("Free heap: %d", ESP.getFreeHeap());
 	// Attach buttons callbacks
 	io_deattachAllCB();
 	io_attachCBRight(audio_nextTrack);
@@ -214,12 +219,12 @@ audioState_t audio_getState(){
 
 /*
 void audio_info(const char *info){
-	log_d("info : %s", info);
+//	log_d("info : %s", info);
 }
 void audio_id3data(const char *info){  //id3 metadata
-	log_d("id3data : %s", info);
+//	log_d("id3data : %s", info);
 }
 void audio_eof_mp3(const char *info){  //end of file
-	log_d("eof_mp3 : %s", info);
+//	log_d("eof_mp3 : %s", info);
 }
 */

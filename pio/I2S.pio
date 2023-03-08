@@ -1,0 +1,32 @@
+.program i2s
+.side_set 1 opt
+
+// RP2040 examples files show a pio machine with two side sets for both BCK and WCK, in 8 lines.
+// It can't be implemented on the current pipod version, because of GPIO assignement dicted by tracks positions.
+// This will be optimized on the next revision !
+
+// we need to use the auto fill from TX FIFO.
+// we need the OSR counter to auto-change the values when enough bits have been sent.
+// X is used for decrementing counter when outputting bits
+// Y should be preset to the bit depth (i.e. 16, 24 or 32) - 1, which is reloaded to X at each new byte
+// there is no need for a RX buffer, so all 8 FIFO should be TX.
+
+// I don't know what the behavior is when the FIFO is not provided data
+
+// out 			is the data pin.
+// side-set 	is the BCK pin (main clock).
+// set 			is the WCK pin (word select).
+
+	mov x, y 		side 1	[1]
+left:
+	out pins, 1		side 0	[1]
+	jmp x-- left	side 1	[1]
+	set pins, 1		side 0
+	out pins, 1 	side 0
+	
+	mov x, y 		side 1	[1]
+right:	
+	out pins, 1 	side 0	[1]
+	jmp x-- right 	side 1	[1]
+	set pins, 0		side 0
+	out pins, 1 	side 0

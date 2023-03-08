@@ -1,0 +1,28 @@
+.program SPDIF
+
+// Spdif outputs its data with 32 bits samples.
+// The sample is constructed in the main code, and passed to the PIO.
+// the protocol has to encode its clock and its data on the same line (it's a one wire protocol)
+// it uses the Biphase Mark Code (BMC) :
+// On every clock rising edge, the output value changes.
+// If it's a one, it changes again on the clock falling edge.
+// If it's a zero, it stays the same untill the next rising edge.
+
+// OSR needs to shift LSB first (check that).
+// OSR need to be auto-filled.
+// Y should be init to 0.
+
+.wrap_target
+start:
+	out x, 1
+	mov y, ::y
+	mov pins, y
+	jmp !x end
+	mov y, ::y
+	mov pins, y
+	jmp start	[1]				// This delay might not be needed, but it ensures that both up and down clock time are the same length
+end:
+	nop			[3]
+
+
+.wrap

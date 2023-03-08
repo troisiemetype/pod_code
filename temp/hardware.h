@@ -1,7 +1,14 @@
-#ifndef ESPOD_HARDAWARE_H
-#define ESPOD_HARDAWARE_H
+#ifndef POD_HARDAWARE_H
+#define POD_HARDAWARE_H
 
-#include "esPod.h"
+#include "pod.h"
+
+#include "hardware/pwm.h"
+//#include "hardware/time.h"
+#include "hardware/timer.h"
+#include "hardware/irq.h"
+#include <FreeRTOS.h>
+#include <task.h>
 
 /*
  *	Here is where the global hardware is handled.
@@ -72,6 +79,8 @@ void hw_initHPAmp();
 
 void hw_startDelayDiming();
 void hw_setBacklight(uint8_t value);
+bool _hw_backlightCB(repeating_timer *timer);
+//void _hw_backlightCB(uint timer);
 void _hw_taskBacklight(void *param);
 void _hw_intDimBacklight();
 

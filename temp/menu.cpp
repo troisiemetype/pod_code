@@ -1,4 +1,4 @@
-#include "esPod.h"
+#include "piPod.h"
 // #include "menu.h"
 
 using namespace tinyxml2;
@@ -56,7 +56,7 @@ bool menu_hasSong(const char *filename){
 // Create main menu, call subroutines to parse levels.
 void menu_makeMenu(){
 //	tft.println("creating menu");
-	log_d("creating menu");
+//	log_d("creating menu");
 
 	maxMenuItem = display_getMaxMenuItem();
 
@@ -139,11 +139,10 @@ void menu_makeMenu(){
 	menu_createMusic(artists, albums, songs);
 
 	menu_cbList(menu);
-
 }
 
 bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
-	log_d("creating and sorting music menu");
+//	log_d("creating and sorting music menu");
 //	Serial.println("//////////////////////// unsorted ////////////////////////");
 //	menu_utilDisplayList(ref);
 //	Serial.println("//////////////////////// sorting by name ////////////////////////");
@@ -164,7 +163,7 @@ bool menu_createMusic(MenuList *artists, MenuList *albums, MenuList *ref){
 	MenuItem *item = ref->getFirst();
 
 	if(item == NULL){
-		log_d("no song in database, aborting");
+//		log_d("no song in database, aborting");
 		return false;
 	}
 
@@ -388,7 +387,7 @@ void menu_cbTest(void *empty){
 
 // The callback function to be attached to MenuList objects, when selecting them.
 void menu_cbList(void *list){
-	log_d("creating menu callbacks");
+//	log_d("creating menu callbacks");
 	if(!list) return;
 	io_deattachAllCB();
 	io_attachCBWheelClockwise(menu_next);
@@ -416,17 +415,4 @@ void menu_cbSong(void *data){
 
 void menu_cbPlayer(void *data){
 	audio_updateDisplay();
-}
-
-const char* menu_getXMLTextField(XMLElement *node, const char *field){
-	const char *name = node->FirstChildElement(field)->GetText();
-	if(name) return name;
-	return " ";
-}
-
-int16_t menu_getXMLNumberField(XMLElement *node, const char *field){
-	int value = 0;
-	node->FirstChildElement(field)->QueryIntText(&value);
-//	value = node->IntAttribute(field);
-	return value;
 }

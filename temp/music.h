@@ -2,7 +2,7 @@
 #define ESPOD_MUSIC_H
 
 // #include <Arduino.h>
-#include "esPod.h"
+#include "piPod.h"
 
 struct album_t{
 	String name;

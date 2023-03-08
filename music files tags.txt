@@ -1,4 +1,0 @@
-mp3 : ID3 tag at the beginning of file.
-opus : OGG tag at beginning.
-flac : flac tag at beginning.
-m4a / AAC : tag at end.

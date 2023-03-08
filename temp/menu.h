@@ -3,7 +3,7 @@
 
 // #include <Arduino.h>
 // #include <FS.h>
-#include "esPod.h"
+#include "piPod.h"
 
 // #include "Menu.h"
 
@@ -40,8 +40,5 @@ void menu_cbTest(void *empty);
 void menu_cbList(void *list);
 void menu_cbSong(void *data);
 void menu_cbPlayer(void *data);
-
-const char* menu_getXMLTextField(tinyxml2::XMLElement *node, const char *field);
-int16_t menu_getXMLNumberField(tinyxml2::XMLElement *node, const char *field);
 
 #endif

@@ -10,13 +10,14 @@ ok			Listing files on drive
 				checking listed files still exist
 wop				checking for new files
  								Problem : a directory is marked as changed only if one of its file has changed. it doesn't do it recursively.
- 								So if the file system has the same arborescens as the music library, one needs to parse all of it each time.
+ 								So if the file system has the same arborescense as the music library, one needs to parse all of it each time.
 								One way may be to use the same "database" folder system as on iPods : several folders (iPod have 50),
 								where files are stored randomly on upload, so there is only those folders to check for modifications.
+								Another way is to have a dedicated folder for adding music, like a "drop folder". Updating would be done just in this folder, then deplacing added music in the music folder.
 ok				Breaking the XML database into smaller chunks 		// each AudioTrackData object is saved as raw bytes to SD card.
 			There is a dead bug (rebooting in loop) when a binary database file is empty. Integrity of those data must be checked.
 
-wop			Create a player GUI										// lacks album art.
+wop			Create a player GUI										// lacks album art and time elapsed
 
 wop			See how to make updates automatic. 						// use last write time on folders, but it's not recursive. See above.
 
@@ -28,10 +29,12 @@ ok				start playing.
 ok				Next / previous song.
 ok				Auto next song on song end
 ok				display informations								// except album covers.
+																	// need to manage when text is larger than screen, too.
 				compute file duration								// need a function that checks the file. Maybe use it to get tags too.
-ok				add soft mute/unmute / pause/unpause
+wop				add soft mute/unmute / pause/unpause				// Works, but strange behavior when we change song and it's paused.
 				Make audio output to several outputs (line, S/Pdif, bluetooth, etc.)
-				Manage headphone amplifier
+				Manage headphone amplifier							// Horrible noise.
+																	// Might change ground plane, capacitors, maybe the chip is just fried.
 
 			audio buffer is not fed enough when navigating menus !
 /				use an interrupt to populate audio buffer.
@@ -53,6 +56,6 @@ ok				use a display queue buffer for updating.
 
 			I18n options : create a langage file (xml ?) for translations.
 
-			Play something else than mp3.
+			Play something else than mp3.							// might be ok with the new Audio library used (ESP32-audioI2S)
 
 wop			Give the possibility to change the color scheme.		// branch color. Already created a struct in display.

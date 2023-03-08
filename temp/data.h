@@ -3,7 +3,7 @@
 
 // #include <Arduino.h>
 // #include <FS.h>
-#include "esPod.h"
+#include "piPod.h"
 
 void data_init();
 
@@ -19,7 +19,7 @@ void data_clearDB(void*);
 
 void data_getTrackLength(fs::File *file, AudioTrackData *track);
 
-bool data_getTagMp3(fs::File* file);
+void data_getTagMp3(fs::File* file);
 
 void data_storeTag(const char *id, const char *value);
 /*

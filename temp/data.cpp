@@ -1,5 +1,5 @@
 // #include "data.h"
-#include "esPod.h"
+#include "piPod.h"
 
 const char *musicDir = "/music";
 const char *dataDir = "/system/data";
@@ -35,9 +35,10 @@ bool tagEOF = false;
  */
 
 void data_init(){
+	
 	if(!SD_MMC.exists(musicDir)) SD_MMC.mkdir(musicDir);
 	if(!SD_MMC.exists(dbDir)) SD_MMC.mkdir(dbDir);
-
+	
 	fs::File database = SD_MMC.open(dbDir);
 	data_readDatabase(&database);
 
@@ -45,28 +46,28 @@ void data_init(){
 }
 
 void data_readDatabase(fs::File *dir){
-	log_d("reading database");
+//	log_d("reading database");
 	for(;;){
 		fs::File file = dir->openNextFile();
 		if(!file) break;
-		log_d("next file : %s", file.name());
+//		log_d("next file : %s", file.name());
 
 		track = new AudioTrackData();
 		data_readAudioTrackData(&file, track);
 
-		log_d("\t reading DB : %s", track->getFilename());
+//		log_d("\t reading DB : %s", track->getFilename());
 
 		// check if the file still exists in /music
 		if(SD_MMC.exists(track->getFilename())){
 			// if it exists, push it to menu.
-			log_d("\tpush track to menu");
+//			log_d("\tpush track to menu");
 
 			menu_pushSong(track);
 //			file.close();
 		} else {
 			// If it doesn't, we delete the entry in database, and the track info just created.
 			delete track;
-			log_d("\tno audio file in DB for this entry, removing it.");
+//			log_d("\tno audio file in DB for this entry, removing it.");
 			// file.path() doesn't exist once the file has been closed.
 //			file.close();
 			SD_MMC.remove(file.path());
@@ -81,14 +82,14 @@ void data_checkNewFiles(){
 
 // Parse folder /music/, to recursively list every audio file on the SD card.
 void data_parseFolder(fs::File *folder, uint8_t lvl){
-	log_d("\tparsing folder %s", folder->name());
+//	log_d("\tparsing folder %s", folder->name());
 	++lvl;
 	for(;;){
 		fs::File file = folder->openNextFile();
 		if(!file){
 			break;
 		}
-//		log_d("new file : %s", file.name());
+////		log_d("new file : %s", file.name());
 		if(file.isDirectory()){
 			// Recursively dive into every folder we find.
 			data_parseFolder(&file, lvl);
@@ -104,13 +105,13 @@ void data_checkSong(fs::File *file){
 	const char *path = file->path();
 	const char *ext = strrchr(path, '.');
 
-//	log_d("file %s ; extension %s", name, ext);
+////	log_d("file %s ; extension %s", name, ext);
 
 	// We check if menu has already this song (which has already been loaded from database)
 	if(menu_hasSong(path)) return;	
 
-//	log_d("getting tag");
-	log_d("getting tags for  %s", path);
+////	log_d("getting tag");
+//	log_d("getting tags for  %s", path);
 
 	track = new AudioTrackData();
 	track->setFilename(path);
@@ -119,11 +120,9 @@ void data_checkSong(fs::File *file){
 
 	// each file type has its own parser.
 	if(strcmp(ext, ".mp3") == 0){
-		if(data_getTagMp3(file)){
-			log_d("no tags for this file");
-			delete track;
-			return;
-		}
+		data_getTagMp3(file);
+		
+//		data_getTrackLength(file, track);
 	} else {
 		// If we don't have a parser for the type, it's not supported.
 		delete track;
@@ -139,7 +138,7 @@ void data_checkSong(fs::File *file){
 }
 
 void data_readAudioTrackData(fs::File *file, AudioTrackData *track){
-	log_d("read data from %s", file->name());
+//	log_d("read data from %s", file->name());
 	// make a clone copy of the file, byte for byte, to the AudioTrackData instance.
 	file->read((uint8_t*)track, sizeof(AudioTrackData) / sizeof(uint8_t));
 
@@ -205,7 +204,7 @@ void data_writeAudioTrackData(AudioTrackData *track){
 	b += file.write((uint8_t*)track->getFilename(), strlen(track->getFilename()) + 1);
 
 
-	log_d("%i bytes written to file %s\n", b, dbName);
+//	log_d("%i bytes written to file %s\n", b, dbName);
 }
 
 void data_clearDB(void *empty){
@@ -214,7 +213,7 @@ void data_clearDB(void *empty){
 		fs::File file = database.openNextFile();
 		if(!file) break;
 
-		log_d("suppressing file %s", file.name());
+//		log_d("suppressing file %s", file.name());
 		SD_MMC.remove(file.path());
 	}
 	database.close();
@@ -235,7 +234,7 @@ void data_getTrackLength(fs::File *file, AudioTrackData *track){
 		}
 	}
 	track->setDuration(size * 26);
-	Serial.printf("%i frames / %ims\n", size, size * 26);
+//	log_d("%i frames / %ims\n", size, size * 26);
 }
 
 /*
@@ -257,27 +256,28 @@ void data_getTrackLength(fs::File *file, AudioTrackData *track){
  *		8-9			Flags
  *
  */
-bool data_getTagMp3(fs::File* file){
+void data_getTagMp3(fs::File* file){
 	char header[10];
 	file->read((uint8_t*)header, 10);
-	log_d("header = %s", header);
+//	log_d("header = %s", header);
 	if(header[0] != 'I' || header[1] != 'D' || header[2] != '3'){
 		// no header, return. Or see what to do.
-		return 1;
+		data_storeTag("eof", "");
+		return;
 	}
-	log_d("version %i %i", header[3], header[4]);
+//	log_d("version %i %i", header[3], header[4]);
 
 	// Skipping flags.
 
 	// Determinig header size.
 	uint32_t size = 0;
 	for(uint8_t i = 6; i < 10; i++){
-//		log_d("byte : %i", header[i + 6]);
+////		log_d("byte : %i", header[i + 6]);
 		size <<= 7;
 		uint32_t add = header[i];
 		size += add;
 	}
-	log_d("header size : %i", size);
+//	log_d("header size : %i", size);
 
 	int32_t consummed = size;
 
@@ -291,7 +291,7 @@ bool data_getTagMp3(fs::File* file){
 
 		// account for 0-padding in tags
 		if(frameIdentifier[0] == 0 && frameIdentifier[1] == 0 && frameIdentifier[2] == 0 && frameIdentifier[3] == 0){
-			log_d("padding");
+//			log_d("padding");
 
 			data_storeTag("eof", "");
 /*
@@ -300,22 +300,22 @@ bool data_getTagMp3(fs::File* file){
 				c = file->read();
 			}
 */
-			return 0;
+			return;
 		}
 
-		log_d("id : %s", frameIdentifier);
+//		log_d("id : %s", frameIdentifier);
 
 		// Determining frame size.
 		uint32_t frameSize = 0;
 		for(uint8_t i = 0; i < 4; i++){
-	//		log_d("byte : %i", header[i + 6]);
+//	//		log_d("byte : %i", header[i + 6]);
 			frameSize <<= 8;
 			uint32_t add = (uint32_t)file->read();
 			consummed--;
-//			log_d("byte %i", add);
+////			log_d("byte %i", add);
 			frameSize += add;
 		}
-		log_d("frame size : %i", frameSize);
+//		log_d("frame size : %i", frameSize);
 
 
 		// Skipping flags for now.
@@ -324,6 +324,13 @@ bool data_getTagMp3(fs::File* file){
 		consummed -=2;
 		// We do nothing with empty tags.
 		if(frameSize == 0) continue;
+		// We do nothing either with image tag !
+		if(strcmp(frameIdentifier, "APIC") == 0){
+			for(uint32_t b = 0; b < frameSize; b++){
+				file->read();
+			}
+			continue;
+		}
 		// Skipping the 0 byte as well
 		file->read();
 		consummed--;
@@ -336,19 +343,19 @@ bool data_getTagMp3(fs::File* file){
 		consummed -= frameSize;
 		frameContent[frameSize] = 0;
 
-		log_d("content : %s", frameContent);
+//		log_d("content : %s", frameContent);
 
 		data_storeTag(frameIdentifier, frameContent);
 	}
 
 	data_storeTag("eof", "");
-	return 0;
+	return;
 }
 
 
 // Populate database binary file based on SD card content.
 void data_storeTag(const char* id, const char* value){
-	log_d("storing data : %s %s", id, value);
+//	log_d("storing data : %s %s", id, value);
 	
 	if(strcmp(id, "TIT2") == 0){
 		track->setName(value);
@@ -374,18 +381,18 @@ void data_storeTag(const char* id, const char* value){
 	// here we populate the artist, album and name if they were not in the tag.
 	// Not sure if it's better to do it here, or during the parsing of database.
 	if(tagEOF){
-//		log_d("tag parsed");
-//		log_d("name : %s", track->getName());
-//		log_d("artist : %s", track->getArtist());
-//		log_d("album : %s", track->getAlbum());
-//		log_d("name : %x", *track->getName());
-//		log_d("artist : %x", *track->getArtist());
-//		log_d("album : %x", *track->getAlbum());
+////		log_d("tag parsed");
+////		log_d("name : %s", track->getName());
+////		log_d("artist : %s", track->getArtist());
+////		log_d("album : %s", track->getAlbum());
+////		log_d("name : %x", *track->getName());
+////		log_d("artist : %x", *track->getArtist());
+////		log_d("album : %x", *track->getAlbum());
 
 //		if(track->getName() == (const char*)""){
 		if(track->getName() == NULL){
 
-			log_d("file has no name");
+//			log_d("file has no name");
 
 			const char *filename = (track->getFilename());
 			char *name = (char*)malloc(strlen(filename));
@@ -397,7 +404,7 @@ void data_storeTag(const char* id, const char* value){
 			memmove(name, (name + 1), (strlen(name) - strlen(ext) - 1));
 			*(name + (strlen(name) - strlen(ext) - 1)) = '\0';
 
-			log_d("name : %s", name);
+//			log_d("name : %s", name);
 			track->setName(name);
 
 			// free(name) makes esp reboot.See Why (There was the same problem when dealing with memory freeing in linked classes)
@@ -408,13 +415,13 @@ void data_storeTag(const char* id, const char* value){
 //		if(track->getAlbum() == (const char*)""){
 		if(track->getAlbum() == NULL){
 
-//			log_d("file has no album");
+////			log_d("file has no album");
 			track->setAlbum("unknown album");
 		}
 
 //		if(track->getArtist() == (const char*)""){
 		if(track->getArtist() == NULL){
-//			log_d("file has no artist");
+////			log_d("file has no artist");
 			track->setArtist("unknown artist");
 		}
 	}
