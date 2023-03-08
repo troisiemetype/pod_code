@@ -10,7 +10,7 @@
 #include "display.h"
 #include "log.h"
 
-//#include "hardware.h"
+#include "hardware.h"
 /*
 #include "Menu.h"
 #include "PushButton.h"

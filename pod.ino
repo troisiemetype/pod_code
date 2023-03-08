@@ -5,8 +5,8 @@ bool state = 1;
 Logger console = Logger();
 
 void setup(){
-	pinMode(29, OUTPUT);
-	pinMode(24, OUTPUT);
+//	pinMode(29, OUTPUT);
+//	pinMode(24, OUTPUT);
 	
 	display_init();
 	console.attachOutput(&consoleSprite);
@@ -16,7 +16,9 @@ void setup(){
 
 	delay(250);
 
-	digitalWrite(24, 1);
+//	digitalWrite(24, 1);
+	hw_init();
+	hw_setBacklight(255);
 /*
 	for(uint8_t i = 0; i < 50; ++i){
 
@@ -45,14 +47,12 @@ void setup(){
 	}
 */
 	console.println("started !");
-
 }
 
 void loop(){
-
+/*
 	digitalWrite(29, state);
 	state ^= 1;
 	delay(50);
-	
-
+*/
 }
