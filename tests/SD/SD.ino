@@ -1,4 +1,4 @@
-#include "pod.h"
+#include "../../pod.h"
 
 bool state = 1;
 
@@ -26,7 +26,7 @@ void setup(){
 	SDFSConfig sdConf;
 	sdConf.setAutoFormat(false);
 	sdConf.setCSPin(13);
-	sdConf.setSPISpeed(SD_SCK_MHZ(70));
+	sdConf.setSPISpeed(SD_SCK_MHZ(50));
 	sdConf.setSPI(SPI1);
 	// What is this one ? partitions we want to read, if there are several ones ?
 //	sdConf.setPart(uint8_t);
@@ -68,22 +68,22 @@ void loop(){
 void parseFolder(fs::File *folder, uint8_t level){
 	for(;;){
 		for(uint8_t i = 0; i < level; ++i){
-//			console.print("  ");
+			console.print("  ");
 		}
 		fs::File file = folder->openNextFile();
 		if(!file){
-//			console.println();
+			console.println();
 			break;
 		}
 
-//		console.print(file.name());
+		console.print(file.name());
 
 		if(file.isDirectory()){
-//			console.println();
+			console.println();
 			parseFolder(&file, level + 1);
 		} else {
 
 		}
-//		console.println();
+		console.println();
 	}
 }

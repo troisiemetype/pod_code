@@ -13,7 +13,13 @@ volatile bool blChanging = false;
 const uint8_t BL_TIMER_INC = 10;
 repeating_timer blTimer;
 
+alarm_id_t dimAlarm = -1;
+bool isDimmed = false;
+
+uint8_t volume = 0;
+
 void hw_init(){
+	console.println("initializing hardware");
 	hw_initBacklight();
 }
 
@@ -32,12 +38,16 @@ void hw_initBacklight(){
 	pwm_set_enabled(slice, true);
 
 	hw_setBacklight(blDefault);
+	console.println("  backlight");
 }
 
 void hw_initHPAmp(){
 	// implement the digital reosthat control
+	console.println("  headphone amp");
 }
 
+// Launch a repeating timer for changing backlight
+// On each fire of the callback function associated, we will change the PWM duty cycle of the led backlight.
 void hw_setBacklight(uint8_t value){
 	blGoal = value;
 	if(blGoal > blLevel) blInc = 1;
@@ -49,6 +59,7 @@ void hw_setBacklight(uint8_t value){
 	add_repeating_timer_ms(BL_TIMER_INC, _hw_backlightCB, NULL, &blTimer);
 }
 
+// Callback for changing the dutycycle of backlight.
 bool _hw_backlightCB(repeating_timer *timer){
 	if(blGoal != blLevel){
 		blLevel += blInc;
@@ -61,4 +72,46 @@ bool _hw_backlightCB(repeating_timer *timer){
 		return false;
 	}
 
+}
+
+// Start a timeout for display diming after 
+void hw_setDimTimeout(){
+	// to cancel : 
+//	cancelAlarm(dimAlarm);
+	// delay, callback, data to pass, shall the delay be already elapsed : execute the callback
+	dimAlarm = add_alarm_in_ms(30000, _hw_dimCB, NULL, false);
+}
+
+int64_t _hw_dimCB(int32_t value, void *data){
+	hw_setBacklight(8);
+	isDimmed = true;
+	dimAlarm = -1;
+	return value;
+}
+
+
+void hw_setVolume(uint8_t vol){
+	if(vol >= 64) vol = 63;
+	volume = vol;
+//	hpAmp.volume(volume);
+}
+
+uint8_t hw_getVolume(){
+	return volume;
+}
+
+uint8_t hw_volumeUp(){
+	if(volume < 63){
+		volume += 1;
+	}
+//	hpAmp.volume(volume);
+	return volume;
+}
+
+uint8_t hw_volumeDown(){
+	if(volume > 0){
+		volume -= 1;
+	}
+//	hpAmp.volume(volume);
+	return volume;
 }
